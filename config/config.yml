@@ -1,0 +1,40 @@
+genome: hg38
+bigwig:
+  normalizeUsing: RPKM
+  binSize: 10
+  extra: ""
+macs2:
+  qvalue: 0.05
+  regions: narrow #broad or narrow
+  broad_cutoff: 0.1
+  extra_params: ""
+resources:
+  account: JNATHAN-SL3-CPU
+  partition: cclake
+  trim:
+    cpu: 8
+    time: 60
+  fastqc:
+    cpu: 6
+    time: 60
+  mapping:
+    cpu: 16
+    time: 120
+  samtools:
+    cpu: 4
+    time: 30
+  deeptools:
+    cpu: 8
+    time: 120
+  deseq2:
+    cpu: 6
+    time: 60
+  r:
+    cpu: 4
+    time: 30
+  diffbind:
+    cpu: 56
+    time: 360
+  macs2:
+    cpu: 12
+    time: 120

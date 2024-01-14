@@ -1,4 +1,46 @@
-# Main entrypoint of the workflow. 
-# Please follow the best practices: 
-# https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there. 
+from snakemake.utils import min_version
+from scripts import general_functions as utils
+from scripts.resources import Resources
+
+
+# set minimum snakemake version
+min_version("6.4.1")
+
+report: "report/workflow.rst"
+
+# load config file
+configfile: "config/config.yml"
+
+# load ChIP info
+regions = config["macs2"]["regions"]
+
+# load genome resources to be used in rules
+resources = Resources(config["genome"], config["ensembl_genome_build"])
+fasta = resources.fasta
+genome = resources.genome
+
+# get sample names
+SAMPLES = utils.import_samples()
+IP_SAMPLES = utils.import_ip_samples()
+UNIQUE_IP_NAMES = utils.import_unique_ip_names(IP_SAMPLES)
+INPUT_SAMPLES = utils.import_input_samples()
+
+# import rules
+include: "rules/resources.smk"
+include: "rules/qc.smk"
+include: "rules/trim.smk"
+include: "rules/align.smk"
+include: "rules/bigwig.smk"
+include: "rules/peaks.smk"
+
+# target rule
+rule all:
+    input: 
+        expand("results/peaks/{regions}/{sample_ip}_vs_{sample_input}/{sample_ip}_peaks_annotated.txt", zip,sample_ip=IP_SAMPLES, sample_input=INPUT_SAMPLES, regions=regions),
+        expand("results/peaks/{regions}/{name}/{name}_peaks_annotated.txt", name=UNIQUE_IP_NAMES, regions=regions),
+        "results/qc/readcounts_plot.pdf",
+        "results/qc/multiqc.html",
+
+onsuccess: 
+    print("Analysis finished successfully!")
+
