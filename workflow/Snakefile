@@ -1,46 +1,55 @@
-from snakemake.utils import min_version
-from scripts import general_functions as utils
+from snakemake.utils import min_version, validate
 from scripts.resources import Resources
+include: "scripts/general_functions.smk"
 
-
-# set minimum snakemake version
-min_version("6.4.1")
+# Set minimum snakemake version
+min_version("7.25.0")
 
 report: "report/workflow.rst"
 
-# load config file
+# Wrapper version
+wrapper_version = "v3.8.0"
+
+# Load config file
 configfile: "config/config.yml"
 
-# load ChIP info
-regions = config["macs2"]["regions"]
+# Load ChIP info
+regions = config["peak_calling"]["macs2"]["regions"]
 
-# load genome resources to be used in rules
+# Load genome resources to be used in rules
 resources = Resources(config["genome"], config["ensembl_genome_build"])
 fasta = resources.fasta
 genome = resources.genome
 
-# get sample names
-SAMPLES = utils.import_samples()
-IP_SAMPLES = utils.import_ip_samples()
-UNIQUE_IP_NAMES = utils.import_unique_ip_names(IP_SAMPLES)
-INPUT_SAMPLES = utils.import_input_samples()
+# Get sample names
+SAMPLES = samples()
+IP_SAMPLES = ip_samples()
+CONTROL_SAMPLES = control_samples()
+CONDITIONS = conditions()
 
-# import rules
+# Import rules
 include: "rules/resources.smk"
 include: "rules/qc.smk"
+include: "rules/plotting.smk"
 include: "rules/trim.smk"
 include: "rules/align.smk"
+include: "rules/deeptools.smk"
 include: "rules/bigwig.smk"
 include: "rules/peaks.smk"
 
-# target rule
+# Target rule
 rule all:
     input: 
-        expand("results/peaks/{regions}/{sample_ip}_vs_{sample_input}/{sample_ip}_peaks_annotated.txt", zip,sample_ip=IP_SAMPLES, sample_input=INPUT_SAMPLES, regions=regions),
-        expand("results/peaks/{regions}/{name}/{name}_peaks_annotated.txt", name=UNIQUE_IP_NAMES, regions=regions),
-        "results/qc/readcounts_plot.pdf",
-        "results/qc/multiqc.html",
+        targets()
+
+# Save snakemake terminal output to log file
+time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+snake_log = f"logs/snakemake/{time}_snakemake.log"
+os.makedirs("logs/snakemake", exist_ok=True)
 
 onsuccess: 
+    shell("cp -v {log} {snake_log}")
     print("Analysis finished successfully!")
-
+onerror:
+    shell("cp -v {log} {snake_log}")
+    print(f"Analysis failed...\nCheck {snake_log} for details")
