@@ -1,16 +1,50 @@
 genome: hg38
-bigwig:
-  normalizeUsing: RPKM
-  binSize: 10
-  extra: ""
-macs2:
-  qvalue: 0.05
-  regions: narrow #broad or narrow
-  broad_cutoff: 0.1
-  extra_params: ""
+ensembl_genome_build: 110
+read_length: 150
+samtools:
+  mapq: 10
+deeptools:
+  bigwig:
+    normalizeUsing: RPKM
+    binSize: 10
+    extra: ""
+  computeMatrix:
+    mode: scale-regions # scale-regions or reference-point
+    referencePoint: TSS # TSS, TES, center (only for reference-point mode)
+    regionBodyLength: 6000
+    upstream: 3000
+    downstream: 3000
+    binSize: 1000
+    averageTypeBins: mean
+  plotHeatmap:
+    interpolationMethod: auto
+    plotType: lines # lines, fill, se, std
+    colorMap: viridis # https://matplotlib.org/2.0.2/users/colormaps.html
+    alpha: 1.0
+    extra: ""
+peak_calling:
+  macs2:
+    run: True
+    qvalue: 0.05
+    regions: narrow #broad or narrow
+    broad_cutoff: 0.1
+    extra: ""
+  htseq_deseq2:
+    run: False
+    use_htseq_count: False
+    mode: intersection-nonempty # union, intersection-strict, intersection-nonempty
+    feature: gene # GTF feature type to count reads in
+    extra: "" # any additional parameters for htseq-count
+    DESeq2: 
+      cumulative_filter_out: 10 # Filter out genes with less than this number of reads
+      smallest_group: 3 # Smallest group size for filter
+      alpha: 0.05 # FDR cutoff for DESeq2/plots
+      fc: 0.5 # fold change cutoff for volcano plots
+  genomic_blanket:
+    run: False
+    window_size: 100 # Window size in kbp
+    extra: ""
 resources:
-  account: JNATHAN-SL3-CPU
-  partition: cclake
   trim:
     cpu: 8
     time: 60
