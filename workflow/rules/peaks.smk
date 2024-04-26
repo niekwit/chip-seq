@@ -138,12 +138,12 @@ if config["peak_calling"]["macs2"]["run"]:
         input:
             xls=f"results/{peak_mode}/fdr{fdr}/{{conditions}}/{{conditions}}_peaks.xls",
             adb=f"resources/{resources.genome}_{resources.build}_annotation.Rdata",
+            gtf=resources.gtf,
         output:
             bed=f"results/{peak_mode}/fdr{fdr}/{{conditions}}/{{conditions}}_peaks.bed",
             txt=f"results/{peak_mode}/fdr{fdr}/{{conditions}}/{{conditions}}_annotated.peaks.txt",
         params:
             pm=peak_mode,
-            gtf=resources.gtf,
             extra=""
         threads: config["resources"]["deeptools"]["cpu"]
         resources:
@@ -160,7 +160,7 @@ if config["peak_calling"]["macs2"]["run"]:
             input:
                 txt=f"results/{peak_mode}/fdr{fdr}/{{conditions}}/{{conditions}}_annotated.peaks.txt",
             output:
-                ids=f"results/{peak_mode}/fdr{fdr}/{{conditions}}.geneIDs.txt"
+                ids=f"results/{peak_mode}/fdr{fdr}/{{conditions}}.geneIDs.txt",
             threads: 1
             resources:
                 runtime=5
