@@ -1,0 +1,163 @@
+$schema: "http://json-schema.org/draft-06/schema#"
+
+description: Snakemake configuration file
+
+type: object
+
+properties:
+  genome:
+    type: string
+    enum: ["hg38", "hg19", "mm10", "mm9", "dm3", "dm6"]
+    description: Ensembl genome
+  
+  ensembl_genome_build:
+    type: integer
+    minimum: 1
+    description: Ensembl genome build
+ 
+  deeptools:
+    type: object
+    properties:
+      bigwig:
+        type: object
+        properties:
+          binSize:
+            type: integer
+            minimum: 1
+          normalizeUsing:
+            type: string
+            enum: ["RPKM", "CPM", "BPM", "RPGC", "None"]
+          extra:
+            type: string
+      
+      computeMatrix:
+        type: object
+        properties:
+          mode:
+            type: string
+            enum: ["scale-regions", "reference-point"]
+          referencePoint:
+            type: string
+            enum: ["TSS", "TES", "center"]
+          regionBodyLength:
+            type: integer
+            minimum: 1
+          upstream:
+            type: integer
+            minimum: 1
+          downstream:
+            type: integer
+            minimum: 1
+          binSize:
+            type: integer
+            minimum: 1
+          averageTypeBins:
+            type: string
+            enum: ["mean", "median", "min", "max", "std", "sum"]
+          regionsFileName:
+            type: string
+          no_whole_genome:
+            type: boolean
+          extra:
+            type: string
+      
+      plotHeatmap:
+        type: object
+        properties:
+          interpolationMethod:
+            type: string
+            enum: ["auto", "nearest", "bilinear", "bicubic", "gaussian"]
+          plotType:
+            type: string
+            enum: ["lines", "fill", "se", "std"]
+          colorMap:
+            type: string
+          alpha:
+            type: number
+            minimum: 0
+            maximum: 1
+          extra:
+            type: string
+        
+      required:
+        - bigwig
+        - computeMatrix
+        - plotHeatmap
+  
+  peak_calling:
+    type: object
+    properties:
+      macs2:
+        type: object
+        properties:
+          run:
+            type: boolean
+          qvalue:
+            type: number
+            minimum: 0
+            maximum: 1
+          regions:
+            type: string
+            enum: ["broad", "narrow"]
+          broad_cutoff:
+            type: number
+            minimum: 0
+            maximum: 1
+          extra:
+            type: string
+      
+      htseq_deseq2:
+        type: object
+        properties:
+          run:
+            type: boolean
+          use_htseq_count:
+            type: boolean
+          mode:
+            type: string
+            enum: ["union", "intersection-strict", "intersection-nonempty"]
+          feature:
+            type: string
+          extra:
+            type: string
+          DESeq2:
+            type: object
+            properties:
+              cumulative_filter_out:
+                type: integer
+                minimum: 1
+              smallest_group:
+                type: integer
+                minimum: 1
+              alpha:
+                type: number
+                minimum: 0
+                maximum: 1
+              fc:
+                type: number
+                minimum: 0
+              extra:
+                type: string
+      
+      genomic_blanket:
+        type: object
+        properties:
+          run:
+            type: boolean
+          window_size:
+            type: integer
+            minimum: 1
+          extra:
+            type: string
+
+      required:
+        - macs2
+        - htseq_deseq2
+        - genomic_blanket
+
+required:
+  - genome
+  - ensembl_genome_build
+  - deeptools
+  - peak_calling
+  - resources
