@@ -1,47 +1,55 @@
-import pandas as pd
 import re
+import os
+import pandas as pd
 from snakemake.shell import shell
 
-# write all stdout and stderr to log file
-log = snakemake.log_fmt_shell(stdout=True, stderr=True)
+# Get snakemake params
+genome = snakemake.params["genome"]
+qvalue = snakemake.params["qvalue"]
+extra = snakemake.params["extra"]
+peak_files = snakemake.output["xls"]
+logs = snakemake.log
+base_dir = snakemake.params["base_dir"]
 
-# get snakemake params
-format= snakemake.params["f"]
-genome = snakemake.params["g"]
-qvalue = snakemake.params["q"]
-extra = snakemake.params["e"]
-d = snakemake.params["d"]
-
-# get sample info
 csv = pd.read_csv("config/samples.csv")
 
-# set MACS2 genome size parameter (removes trailing numbers from genome name)
-genome = re.sub(r"\d+$","",genome)
+# Set MACS2 genome size parameter 
+if "hg" in genome:
+    genome = "hs"
+else:
+    # Remove trailing numbers from genome name
+    genome = re.sub(r"\d+$", "", genome)
 
-# create MACS2 command for unique IP sample name with matching input files
-for n in snakemake.wildcards["name"]:
-    # get replicate IP BAM files
-    ip = csv[csv["Sample"].str.contains(n)]["Sample"].tolist()
-    ip_bams = " ".join([f"results/mapped/{x}_dedup.bam" for x in ip])
+# Get conditions from peak xls files
+conditions = [os.path.basename(x).replace("_peaks.xls", "") for x in peak_files]
+
+# Create MACS2 command for unique IP sample name with matching input files
+for condition in conditions:
+    # Get log file
+    log = [x for x in logs if condition in x]
     
-    # get replicate matching input samples
-    inpt = csv[csv["Sample"].str.contains(n)]["Input"].tolist()
-    input_bams = " ".join([f"results/mapped/{x}_dedup.bam" for x in inpt])
+    # Get replicate IP BAM files
+    ip = csv[csv["sample"].str.contains(condition)]["sample"].tolist()
+    ip_bams = " ".join([f"results/mapped/{x}.dedup.bam" for x in ip])
     
-    # create output dir string
-    outdir = f"{d}/{n}"
+    # Get replicate matching input samples
+    # Some samples may have the same control samples
+    inpt = csv[csv["sample"].str.contains(condition)]["control"].unique().tolist()
+    input_bams = " ".join([f"results/mapped/{x}.dedup.bam" for x in inpt])
     
-    # run MACS2 for replicate IP and matching input samples
+    # Create output dir string
+    outdir = f"{base_dir}/{condition}"
+    
+    # Run MACS2 for replicate IP and matching input samples
     shell(
         "macs2 callpeak "
-        f"-t {ip_bams} "
-        f"-c {input_bams} "
-        f"-n {n} "
-        f"--outdir {outdir} "
-        f"-f {format} "
-        f"-g {genome} "
-        f"-q {qvalue} "
-        f"{extra} {log}"
+        "-t {ip_bams} "
+        "-c {input_bams} "
+        "-n {condition} "
+        "--outdir {outdir} "
+        "-f BAMPE "
+        "-g {genome} "
+        "-q {qvalue} "
+        "{extra} "
+        "> {log} 2>&1"
         )
-
-
