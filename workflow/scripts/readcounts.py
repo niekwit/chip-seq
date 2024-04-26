@@ -1,32 +1,35 @@
 import pysam
 import pandas as pd
+import os
 
-# get bam files
+# Get bam files
 prededup = snakemake.input["pre"]
 dedup = snakemake.input["post"]
 
-# nested list to store read counts and convert to df later
-df = [] 
+threads = str(snakemake.threads)
+
+# Lists to store read counts and convert to df later
+samples = []
+pre_counts = []
+post_counts = []
 
 # count reads pre and post deduplication
-for i in range(len(dedup)):
-    # get sample name
-    sample = snakemake.wildcards["sample"][i]
+for i, f in enumerate(prededup):
+    # Get sample name
+    samples.append(os.path.basename(f).replace(".bl.sorted.bam", ""))
     
-    # count reads pre deduplication
-    pre_count = pysam.view("-@", str(snakemake.threads), "-c", "-F", "260", prededup[i])
+    # Count reads pre deduplication
+    pre_counts.append(pysam.view("-@", threads, "-c", "-F", "260", f))
     
-    # count reads post deduplication
-    post_count = pysam.view("-@", str(snakemake.threads), "-c", "-F", "260", dedup[i])
+    # Count reads post deduplication
+    post_counts.append(pysam.view("-@", threads, "-c", "-F", "260", dedup[i]))
     
-    # add data to df
-    df.append([sample, pre_count, "pre-deduplication"])
-    df.append([sample, post_count, "post-deduplication"])
-
-# convert df to dataframe
-df = pd.DataFrame(df, columns=["sample","count","type"])
+# Create df
+df = pd.DataFrame({
+    "sample": samples,
+    "pre.dedup_counts": pre_counts,
+    "post.dedup_counts": post_counts
+})
 
 # save df to csv
 df.to_csv(snakemake.output[0], index=False)
-
-
