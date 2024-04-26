@@ -4,7 +4,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - macs2=2.2.9.1
-  - homer=4.11
   - python=3.10
-  - pandas=2.0.3  
+  - macs2=2.2.9.1
+  - htseq=2.0.4
+  - pandas=2.0.3 
