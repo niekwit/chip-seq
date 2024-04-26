@@ -1,11 +1,3 @@
-from snakemake.utils import min_version, validate
-from snakemake.logging import logger
-from scripts.resources import Resources
-import pandas as pd
-import os
-import re
-import datetime
-
 def targets():
     # Base targets
     TARGETS = [
@@ -22,13 +14,19 @@ def targets():
     ]
 
     if config["peak_calling"]["macs2"]["run"]:
+        TARGETS.append(expand(f"results/{peak_mode}/fdr{fdr}/{{conditions}}/{{conditions}}_annotated.peaks.txt", conditions=CONDITIONS))
         if regions == "narrow":
             TARGETS.extend([
                 expand(f"results/macs2_narrow/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.narrowPeak", ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
                 f"results/plots/macs2_narrow/fdr{fdr}/peaks_distance_to_TSS.pdf", 
                 f"results/plots/macs2_narrow/fdr{fdr}/peak_distributions.pdf",
                 ])
-
+        elif regions == "broad":
+            TARGETS.extend([
+                expand(f"results/macs2_broad/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.broadPeak", ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
+                f"results/plots/macs2_broad/fdr{fdr}/peaks_distance_to_TSS.pdf", 
+                f"results/plots/macs2_broad/fdr{fdr}/peak_distributions.pdf",
+                ])
     return TARGETS
         
 
@@ -213,3 +211,13 @@ def peak_fdr(type_):
         return config["peak_calling"]["macs2"]["qvalue"]
     elif type_ == "macs2_broad_cutoff":
         return config["peak_calling"]["macs2"]["broad_cutoff"]
+
+
+def peak_mode():
+    """
+    Returns MACS2 peak calling mode as string based on config file
+    """
+    if config["peak_calling"]["macs2"]["regions"] == "broad":
+        return "macs2_broad"
+    else:
+        return "macs2_narrow"
