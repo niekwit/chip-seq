@@ -9,10 +9,37 @@ library(ChIPseeker)
 library(tidyverse)
 
 # Load Snakemake parameters
+xls <- snakemake@input[["xls"]]
 DB <- snakemake@input[["adb"]]
-gtf <- snakemake@input[["gtf"]]
+peak.mode <- snakemake@params[["pm"]]
 txt <- snakemake@output[["txt"]]
-bed.file <- snakemake@input[["bed"]]
+bed.file <- snakemake@output[["bed"]]
+gtf <- snakemake@input[["gtf"]]
+
+# Determine how many lines to skip in xls file (comment lines)
+if (peak.mode == "macs2_narrow") {
+  skip <- 21
+} else if (peak.mode == "macs2_broad") {
+  skip <- 22
+} else {
+  stop("Invalid peak mode found...")
+}
+
+# Load xls file and convert to bed
+xls <- read.table(xls,
+                  skip = skip,
+                  header = TRUE)
+bed <- xls %>%
+  select(c("chr", "start", "end", "name", "fold_enrichment")) %>%
+  mutate(strand = ".")
+
+# Write bed to file (annotatePeak requires a file)
+write.table(bed,
+            file = bed.file,
+            quote = FALSE,
+            sep = "\t",
+            row.names = FALSE,
+            col.names = FALSE)
 
 # Load annotation database
 txdb <- makeTxDbFromGFF(gtf)
