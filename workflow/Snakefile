@@ -1,6 +1,10 @@
+import pandas as pd
+import os
+import re
+import datetime
 from snakemake.utils import min_version, validate
+from snakemake.logging import logger
 from scripts.resources import Resources
-include: "scripts/general_functions.smk"
 
 # Set minimum snakemake version
 min_version("7.25.0")
@@ -21,13 +25,15 @@ resources = Resources(config["genome"], config["ensembl_genome_build"])
 fasta = resources.fasta
 genome = resources.genome
 
+include: "scripts/general_functions.smk"
+
 # Get sample names
 SAMPLES = samples()
 IP_SAMPLES = ip_samples()
 CONTROL_SAMPLES = control_samples()
 CONDITIONS = conditions()
+peak_mode = peak_mode()
 
-# Import rules
 include: "rules/resources.smk"
 include: "rules/qc.smk"
 include: "rules/plotting.smk"
