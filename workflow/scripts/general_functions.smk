@@ -14,7 +14,7 @@ def targets():
     ]
 
     if config["peak_calling"]["macs2"]["run"]:
-        TARGETS.append(expand(f"results/{peak_mode}/fdr{fdr}/{{conditions}}/{{conditions}}_annotated.peaks.txt", conditions=CONDITIONS))
+        TARGETS.append(expand(f"results/{peak_mode}/fdr{fdr}/{{conditions}}.geneIDs.txt", conditions=CONDITIONS))
         if regions == "narrow":
             TARGETS.extend([
                 expand(f"results/macs2_narrow/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.narrowPeak", ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
