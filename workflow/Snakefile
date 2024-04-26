@@ -16,6 +16,7 @@ wrapper_version = "v3.8.0"
 
 # Load config file
 configfile: "config/config.yml"
+validate(config, "schemas/config.schema.yaml")
 
 # Load ChIP info
 regions = config["peak_calling"]["macs2"]["regions"]
