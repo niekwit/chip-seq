@@ -1,104 +1,104 @@
-rule hisat2_index:
+rule bowtie2_align:
     input:
-        fasta=fasta
+        sample=["results/trimmed/{sample}_R1.fq.gz",
+                "results/trimmed/{sample}_R2.fq.gz"],
+        idx=multiext(
+            f"resources/{resources.genome}_{resources.build}_index/index",
+            ".1.bt2",
+            ".2.bt2",
+            ".3.bt2",
+            ".4.bt2",
+            ".rev.1.bt2",
+            ".rev.2.bt2",
+        ),
     output:
-        dir=directory("resources/index"),
-    params:
-        prefix=f"resources/index/{genome}"
+        temp("results/mapped/{sample}.bam"),
     log:
-        "logs/hisat2_index/index.log"
+        "logs/bowtie2_align/{sample}.log",
+    params:
+        extra="",
     threads: config["resources"]["mapping"]["cpu"]
     resources: 
         runtime=config["resources"]["mapping"]["time"]
     wrapper:
-        "v2.10.0/bio/hisat2/index"
+        f"{wrapper_version}/bio/bowtie2/align"
 
 
-rule hisat2_align:
+rule bam_filtering:
     input:
-        r1="results/trimmed/{sample}_val_1.fq.gz",
-        r2="results/trimmed/{sample}_val_2.fq.gz",
-        idx="resources/index",
+        bam="results/mapped/{sample}.bam",
     output:
-        temp("results/mapped/{sample}.bam"),
-    log:
-        "logs/hisat2_align/{sample}.log",
+        temp("results/mapped/{sample}.filtered.bam"),
     params:
-        extra="",
-        prefix=f"resources/index/{genome}"
-    threads: config["resources"]["mapping"]["cpu"]
+        extra=f"--min-MQ {config['samtools']['mapq']} -f 3",
+    threads: config["resources"]["samtools"]["cpu"]
     resources: 
-        runtime=config["resources"]["mapping"]["time"]
-    conda:
-        "../envs/read-processing.yaml"
-    shell:
-        "hisat2 -t -p {threads} -x {params.prefix} -1 {input.r1} -2 {input.r2} 2> {log} | "
-        "samtools view -F 260 -bS -@ {threads} > {output}"
+        runtime=config["resources"]["samtools"]["time"]
+    log:
+        "logs/mapq_filtering/{sample}.log"
+    wrapper:
+        f"{wrapper_version}/bio/samtools/view"
 
 
 rule remove_blacklisted_regions:
     input:
-        bam="results/mapped/{sample}.bam",
-        bl=resources.blacklist,
+        left="results/mapped/{sample}.filtered.bam",
+        right=resources.blacklist,
     output:
-        temp("results/mapped/{sample}_bl.bam"),
+        temp("results/mapped/{sample}.bl.bam"),
+    params:
+        extra="-v -nonamecheck",
     threads: config["resources"]["deeptools"]["cpu"]
     resources: 
         runtime=config["resources"]["deeptools"]["time"]
-    conda:
-        "../envs/read-processing.yaml"
     log:
         "logs/remove_blacklisted_regions/{sample}.log"
-    shell:
-        "bedtools intersect -v -a {input.bam} -b {input.bl} -nonamecheck > {output} 2> {log}"
+    wrapper:
+        f"{wrapper_version}/bio/bedtools/intersect"
 
 
 rule sort:
     input:
-        "results/mapped/{sample}_bl.bam",
+        "results/mapped/{sample}.bl.bam",
     output:
-        "results/mapped/{sample}_bl-sorted.bam",
+        "results/mapped/{sample}.bl.sorted.bam",
+    params:
+        extra="-m 2G",
     threads: config["resources"]["samtools"]["cpu"]
     resources: 
         runtime=config["resources"]["samtools"]["time"]
-    conda:
-        "../envs/read-processing.yaml"
     log:
-        "logs/sort/{sample}.log"
-    shell:
-        "samtools sort -@ {threads} -o {output} {input} 2> {log}"
+        "logs/sort_bam/{sample}.log"
+    wrapper:
+        f"{wrapper_version}/bio/samtools/sort"
 
 
 rule deduplication:
     input:
-        "results/mapped/{sample}_bl-sorted.bam"
+        bams="results/mapped/{sample}.bl.sorted.bam",
     output:
-        "results/mapped/{sample}_dedup.bam"
+        bam="results/mapped/{sample}.dedup.bam",
+        metrics="logs/deduplication/metrics.{sample}.txt",
+    params:
+        extra="--REMOVE_DUPLICATES true",
     threads: config["resources"]["samtools"]["cpu"]
     resources: 
         runtime=config["resources"]["samtools"]["time"]
-    conda:
-        "../envs/read-processing.yaml"
     log:
         "logs/deduplication/{sample}.log"
-    shell:
-        "picard MarkDuplicates INPUT={input} OUTPUT={output} REMOVE_DUPLICATES=TRUE "
-        "METRICS_FILE=logs/deduplication/picard.{wildcards.sample}.log 2> {log}"
+    wrapper:
+        f"{wrapper_version}/bio/picard/markduplicates"
 
 
 rule bam_index:
     input:
-        "results/mapped/{sample}_dedup.bam"
+        "results/mapped/{sample}.dedup.bam"
     output:
-        "results/mapped/{sample}_dedup.bam.bai",
+        "results/mapped/{sample}.dedup.bam.bai",
     threads: config["resources"]["samtools"]["cpu"]
     resources: 
         runtime=config["resources"]["samtools"]["time"]
-    conda:
-        "../envs/read-processing.yaml"
     log:
-        "logs/index/{sample}.log"
-    shell:
-        "samtools index -@ {threads} {input} 2> {log}"
-
-
+        "logs/index_bam/{sample}.log"
+    wrapper:
+        f"{wrapper_version}/bio/samtools/index"
