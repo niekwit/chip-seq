@@ -1,21 +1,16 @@
 rule trim_galore_pe:
     input:
-        r1="reads/{sample}_R1.fastq.gz", 
-        r2="reads/{sample}_R2.fastq.gz",
+        ["reads/{sample}_R1_001.fastq.gz", 
+        "reads/{sample}_R2_001.fastq.gz"],
     output:
-        r1=temp("results/trimmed/{sample}_val_1.fq.gz"),
-        r2=temp("results/trimmed/{sample}_val_2.fq.gz"),
+        fasta_fwd=temp("results/trimmed/{sample}_R1.fq.gz"),
+        report_fwd="results/trimmed/reports/{sample}_R1_trimming_report.txt",
+        fasta_rev=temp("results/trimmed/{sample}_R2.fq.gz"),
+        report_rev="results/trimmed/reports/{sample}_R2_trimming_report.txt",
     threads: config["resources"]["trim"]["cpu"],
     params:
         extra="--illumina -q 20",
     log:
         "logs/trim_galore/{sample}.log",
-    conda:
-        "../envs/read-processing.yaml",
-    shell:
-        "trim_galore -j {threads} "
-        "--basename {wildcards.sample} "
-        "-o results/trimmed "
-        "--paired {input.r1} {input.r2} "
-        "{params.extra} " 
-        " 2> {log}"
+    wrapper:
+        f"{wrapper_version}/bio/trim_galore/pe"
