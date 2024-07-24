@@ -1,6 +1,9 @@
 genome: hg38
 ensembl_genome_build: 110
 read_length: 150
+bowtie2:
+  k_mode: 1
+  extra: ""
 samtools:
   mapq: 10
 deeptools:
@@ -29,6 +32,14 @@ peak_calling:
     regions: narrow #broad or narrow
     broad_cutoff: 0.1
     extra: ""
+    consensus_peaks:
+      max_size: 100 # Maximum size of peaks to be extended
+      extend_by: 100 # Number of bp to extend peaks on either side
+      keep: 2 # Minimum number peaks that must overlap to keep
+      enrichment_analysis: 
+        run: True # Perform enrichment analysis
+        dbs: ["GO_Molecular_Function_2018","GO_Biological_Process_2018","KEGG_2019"]
+        terms: 10 # Number of terms to plot
   htseq_deseq2:
     run: False
     use_htseq_count: False
