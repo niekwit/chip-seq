@@ -2,12 +2,12 @@ rule fastqc_post_trim:
     input:
         "results/trimmed/{sample}_R{end}.fq.gz",
     output:
-        html="results/qc/fastqc_trimmed/{sample}_R{end}.html",
-        zip="results/qc/fastqc_trimmed/{sample}_R{end}_fastqc.zip"
+        html="results/qc/fastqc/post-trim/{sample}_R{end}.html",
+        zip="results/qc/fastqc/post-trim/{sample}_R{end}_fastqc.zip"
     params:
         extra = "--quiet"
     log:
-        "logs/fastqc/{sample}{end}.log"
+        "logs/fastqc/post-trim/{sample}{end}.log"
     threads: config["resources"]["fastqc"]["cpu"]
     resources:
         mem_mb = 2048
@@ -19,12 +19,12 @@ rule fastqc_pre_trim:
     input:
         "reads/{sample}_R{end}_001.fastq.gz",
     output:
-        html="results/qc/fastqc/{sample}_R{end}.html",
-        zip="results/qc/fastqc/{sample}_R{end}_fastqc.zip"
+        html="results/qc/fastqc/pre-trim/{sample}_R{end}.html",
+        zip="results/qc/fastqc/pre-trim/{sample}_R{end}_fastqc.zip"
     params:
         extra = "--quiet"
     log:
-        "logs/fastqc/{sample}{end}.log"
+        "logs/fastqc/pre-trim/{sample}{end}.log"
     threads: config["resources"]["fastqc"]["cpu"]
     resources:
         mem_mb = 2048
@@ -34,12 +34,12 @@ rule fastqc_pre_trim:
 
 rule multiqc:
     input:
-        expand("results/qc/{dir}/{sample}_R{end}_fastqc.zip", sample=SAMPLES, end=["1","2"], dir=["fastqc", "fastqc_trimmed"]),
+        expand("results/qc/fastqc/{dir}/{sample}_R{end}_fastqc.zip", sample=SAMPLES, end=["1","2"], dir=["pre-trim", "post-trim"]),
     output:
         "results/qc/multiqc.html",
         directory("results/qc/multiqc_data"),
     params:
-        extra="",  # Optional: extra parameters for multiqc
+        extra="--dirs --dirs-depth 1",  # Optional: extra parameters for multiqc
     log:
         "logs/multiqc.log"
     wrapper:
