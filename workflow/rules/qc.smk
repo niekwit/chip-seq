@@ -1,6 +1,23 @@
-rule fastqc:
+rule fastqc_post_trim:
     input:
         "results/trimmed/{sample}_R{end}.fq.gz",
+    output:
+        html="results/qc/fastqc_trimmed/{sample}_R{end}.html",
+        zip="results/qc/fastqc_trimmed/{sample}_R{end}_fastqc.zip"
+    params:
+        extra = "--quiet"
+    log:
+        "logs/fastqc/{sample}{end}.log"
+    threads: config["resources"]["fastqc"]["cpu"]
+    resources:
+        mem_mb = 2048
+    wrapper:
+        f"{wrapper_version}/bio/fastqc"
+
+
+rule fastqc_pre_trim:
+    input:
+        "reads/{sample}_R{end}_001.fastq.gz",
     output:
         html="results/qc/fastqc/{sample}_R{end}.html",
         zip="results/qc/fastqc/{sample}_R{end}_fastqc.zip"
@@ -17,7 +34,7 @@ rule fastqc:
 
 rule multiqc:
     input:
-        expand("results/qc/fastqc/{sample}_R{end}_fastqc.zip", sample=SAMPLES, end=["1","2"])
+        expand("results/qc/{dir}/{sample}_R{end}_fastqc.zip", sample=SAMPLES, end=["1","2"], dir=["fastqc", "fastqc_trimmed"]),
     output:
         "results/qc/multiqc.html",
         directory("results/qc/multiqc_data"),
