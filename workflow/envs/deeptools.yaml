@@ -13,3 +13,4 @@ dependencies:
   - numpy=1.23.5
   - wiggletools=1.2.11
   - ucsc-wigtobigwig=447
+  - bedtools=2.31.1
