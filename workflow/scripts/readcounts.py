@@ -19,10 +19,10 @@ for i, f in enumerate(prededup):
     samples.append(os.path.basename(f).replace(".bl.sorted.bam", ""))
     
     # Count reads pre deduplication
-    pre_counts.append(pysam.view("-@", threads, "-c", "-F", "260", f))
+    pre_counts.append(pysam.view("-@", threads, "-c", "-F", "260", f).strip())
     
     # Count reads post deduplication
-    post_counts.append(pysam.view("-@", threads, "-c", "-F", "260", dedup[i]))
+    post_counts.append(pysam.view("-@", threads, "-c", "-F", "260", dedup[i]).strip())
     
 # Create df
 df = pd.DataFrame({
