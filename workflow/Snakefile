@@ -43,6 +43,7 @@ IP_SAMPLES = ip_samples()
 CONTROL_SAMPLES = control_samples()
 CONDITIONS = conditions()
 peak_mode = peak_mode()
+bowtie2_dir = bowtie2_dir()
 
 include: "rules/resources.smk"
 include: "rules/qc.smk"
