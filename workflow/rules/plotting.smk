@@ -1,26 +1,26 @@
 rule plot_readcounts: # plot read counts pre and post deduplication
     input:
-        "results/qc/read_counts.csv",
+        f"results/qc/{bowtie2_dir}/read_counts.csv",
     output:
-        report("results/plots/readcounts_plot.pdf", caption="workflow/report/readcounts_plot.rst", category="Read counts"),
+        report(f"results/plots/{bowtie2_dir}/readcounts_plot.pdf", caption="workflow/report/readcounts_plot.rst", category="Read counts"),
     threads: 1
     resources: 
         runtime=10
     conda:
         "../envs/R.yaml"
     log:
-        "logs/qc/readcount_plot.log"
+        f"logs/qc/{bowtie2_dir}/readcount_plot.log"
     script:
         "../scripts/readcount_plot.R"
 
 
 rule plot_alignment_rates:
     input:
-        expand("logs/bowtie2_align/{sample}.log", sample=SAMPLES)
+        expand(f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log", sample=SAMPLES)
     output:
-        report("results/plots/alignment-rates.pdf", caption="workflow/report/alignment-rates.rst", category="Alignment rates")
+        report(f"results/plots/{bowtie2_dir}/alignment-rates.pdf", caption="workflow/report/alignment-rates.rst", category="Alignment rates")
     log:
-        "logs/qc/plot-alignment-rate.log"
+        f"logs/qc/{bowtie2_dir}/plot-alignment-rate.log"
     threads: 1
     resources:
         runtime=10
@@ -32,17 +32,17 @@ rule plot_alignment_rates:
 
 rule plot_PCA:
     input:
-        "results/deeptools/pca.tab",
+        f"results/deeptools/{bowtie2_dir}/pca.tab",
     output:
-        pca=report("results/plots/PCA.pdf", caption="../report/pca.rst", category="PCA"),
-        scree=report("results/plots/scree.pdf", caption="../report/scree.rst", category="PCA"),
+        pca=report(f"results/plots/{bowtie2_dir}/PCA.pdf", caption="../report/pca.rst", category="PCA"),
+        scree=report(f"results/plots/{bowtie2_dir}/scree.pdf", caption="../report/scree.rst", category="PCA"),
     params:
         extra=""
     threads: 1
     resources:
         runtime=10
     log:
-        "logs/plotting/plotPCA.log"
+        f"logs/plotting/{bowtie2_dir}/plotPCA.log"
     conda:
         "../envs/R.yaml"
     script:
@@ -51,13 +51,13 @@ rule plot_PCA:
 
 rule plot_bam_fingerprint:
     input:
-        bam_files=expand("results/mapped/{sample}.dedup.bam", sample=SAMPLES),
-        bam_idx=expand("results/mapped/{sample}.dedup.bam.bai", sample=SAMPLES),
+        bam_files=expand(f"results/{bowtie2_dir}/{{sample}}.dedup.bam", sample=SAMPLES),
+        bam_idx=expand(f"results/{bowtie2_dir}/{{sample}}.dedup.bam.bai", sample=SAMPLES),
     output:
-        fingerprint=report("results/plots/bam_fingerprint.pdf", caption="../report/bam_fingerprint.rst", category="BAM Fingerprint"),
-        qc_metrics="logs/deeptools/plot_fingerprint_qc_metrics.txt",
+        fingerprint=report(f"results/plots/{bowtie2_dir}/bam_fingerprint.pdf", caption="../report/bam_fingerprint.rst", category="BAM Fingerprint"),
+        qc_metrics=f"logs/deeptools/{bowtie2_dir}/plot_fingerprint_qc_metrics.txt",
     log:
-        "logs/deeptools/bam_fingerprint.log"
+        f"logs/deeptools/{bowtie2_dir}/bam_fingerprint.log"
     params:
         extra=""
     threads: config["resources"]["deeptools"]["cpu"]
@@ -69,17 +69,17 @@ rule plot_bam_fingerprint:
 
 rule plot_correlation:
     input:
-        "results/deeptools/bw_summary.npz",
+        f"results/deeptools/{bowtie2_dir}/bw_summary.npz",
     output:
-        tab="results/deeptools/correlation.tab",
-        pdf=report("results/plots/sample_correlation.pdf", caption="../report/correlation.rst", category="Sample correlation"),
+        tab=f"results/deeptools/{bowtie2_dir}/correlation.tab",
+        pdf=report(f"results/plots/{bowtie2_dir}/sample_correlation.pdf", caption="../report/correlation.rst", category="Sample correlation"),
     params:
         extra=""
     threads: config["resources"]["deeptools"]["cpu"]
     resources:
         runtime=config["resources"]["deeptools"]["time"]
     log:
-        "logs/plotting/plotCorrelation.log"
+        f"logs/plotting/{bowtie2_dir}/plotCorrelation.log"
     conda:
         "../envs/deeptools.yaml"
     shell:
@@ -97,12 +97,12 @@ rule plot_correlation:
 
 rule plot_profile:
     input:
-        "results/deeptools/bw_matrix.gz"
+        f"results/deeptools/{bowtie2_dir}/bw_matrix.gz"
     output:
-        plot_img=report("results/plots/profile.pdf", caption="../report/profile.rst", category="Profile"),
-        regions="results/deeptools/plot_profile_regions.bed",
+        plot_img=report(f"results/plots/{bowtie2_dir}/profile.pdf", caption="../report/profile.rst", category="Profile"),
+        regions=f"results/deeptools/{bowtie2_dir}/plot_profile_regions.bed",
     log:
-        "logs/deeptools/plot_profile.log"
+        f"logs/deeptools/{bowtie2_dir}/plot_profile.log"
     params:
         "--plotType=lines "
         "--perGroup "
@@ -113,11 +113,11 @@ rule plot_profile:
 
 rule plot_heatmap:
     input:
-        "results/deeptools/bw_matrix.gz"
+        f"results/deeptools/{bowtie2_dir}/bw_matrix.gz"
     output:
-        heatmap_img=report("results/plots/heatmap.pdf", caption="../report/heatmap.rst", category="Heatmap"),
+        heatmap_img=report(f"results/plots/{bowtie2_dir}/heatmap.pdf", caption="../report/heatmap.rst", category="Heatmap"),
     log:
-        "logs/deeptools/plot_heatmap.log"
+        f"logs/deeptools/{bowtie2_dir}/plot_heatmap.log"
     params:
         "--colorMap viridis "
         "--whatToShow 'plot, heatmap and colorbar' "

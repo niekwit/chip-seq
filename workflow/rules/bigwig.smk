@@ -1,14 +1,14 @@
 rule bigwig:
     input:
-        bam="results/mapped/{sample}.dedup.bam",
-        bai="results/mapped/{sample}.dedup.bam.bai",
+        bam=f"results/{bowtie2_dir}/{{sample}}.dedup.bam",
+        bai=f"results/{bowtie2_dir}/{{sample}}.dedup.bam.bai",
     output:
-        "results/bigwig/single/{sample}.bw",
+        f"results/bigwig/single/{bowtie2_dir}/{{sample}}.bw",
     params:
         effective_genome_size=effective_genome_size(),
         extra=f"--extendReads -bs {config['deeptools']['bigwig']['binSize']} --normalizeUsing {config['deeptools']['bigwig']['normalizeUsing']} {config['deeptools']['bigwig']['extra']}",
     log:
-        "logs/deeptools/bigwig/{sample}.log",
+        f"logs/deeptools/bigwig/{bowtie2_dir}/{{sample}}.log",
     threads: config["resources"]["deeptools"]["cpu"]
     resources: 
         runtime=config["resources"]["deeptools"]["time"]
@@ -18,9 +18,9 @@ rule bigwig:
 
 rule average_wig:
     input:
-        expand("results/bigwig/single/{ip_sample}.bw", ip_sample=IP_SAMPLES),
+        expand(f"results/bigwig/single/{bowtie2_dir}/{{ip_sample}}.bw", ip_sample=IP_SAMPLES),
     output:
-        wig=temp("results/bigwig/average_bw/{condition}.wig"),
+        wig=temp(f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.wig"),
     threads: config["resources"]["deeptools"]["cpu"]
     resources:
         runtime=config["resources"]["deeptools"]["time"]
@@ -34,15 +34,15 @@ rule average_wig:
 
 rule wig2bigwig:
     input:
-        wig="results/bigwig/average_bw/{condition}.wig",
+        wig=f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.wig",
         cs=f"resources/{resources.genome}_chrom.sizes",
     output:
-        "results/bigwig/average_bw/{condition}.bw",
+        f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw",
     threads: config["resources"]["deeptools"]["cpu"]
     resources:
         runtime=config["resources"]["deeptools"]["time"]
     log:
-        "logs/wigToBigWig/{condition}.log"
+        f"logs/wigToBigWig/{bowtie2_dir}/{{condition}}.log"
     conda:
         "../envs/deeptools.yaml"
     shell:

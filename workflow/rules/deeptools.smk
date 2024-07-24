@@ -1,12 +1,12 @@
 rule multiBigWigSummary:
     input:
-        expand("results/bigwig/single/{sample}.bw", sample=SAMPLES)
+        expand(f"results/bigwig/single/{bowtie2_dir}/{{sample}}.bw", sample=SAMPLES)
     output:
-        "results/deeptools/bw_summary.npz",
+        f"results/deeptools/{bowtie2_dir}/bw_summary.npz",
     params:
         extra="",
     log:
-        "logs/deeptools/multiBigWigSummary.log",
+        f"logs/deeptools/{bowtie2_dir}/multiBigWigSummary.log",
     threads: config["resources"]["deeptools"]["cpu"]
     resources: 
         runtime=config["resources"]["deeptools"]["time"]
@@ -23,13 +23,13 @@ rule multiBigWigSummary:
 
 rule PCA:
     input:
-        "results/deeptools/bw_summary.npz"
+        f"results/deeptools/{bowtie2_dir}/bw_summary.npz"
     output:
-        "results/deeptools/pca.tab",
+        f"results/deeptools/{bowtie2_dir}/pca.tab",
     params:
         extra="",
     log:
-        "logs/deeptools/pca.log",
+        f"logs/deeptools/{bowtie2_dir}/pca.log",
     threads: config["resources"]["deeptools"]["cpu"]
     resources: 
         runtime=config["resources"]["deeptools"]["time"]
@@ -46,12 +46,12 @@ rule PCA:
 
 rule computeMatrix:
     input:
-        bigwig=expand("results/bigwig/average_bw/{condition}.bw", condition=CONDITIONS),
+        bigwig=expand(f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw", condition=CONDITIONS),
         bed=resources.gtf,
     output:
-        matrix_gz="results/deeptools/bw_matrix.gz",
+        matrix_gz=f"results/deeptools/{bowtie2_dir}/bw_matrix.gz",
     log:
-        "logs/deeptools/computeMatrix.log",
+        f"logs/deeptools/{bowtie2_dir}/computeMatrix.log",
     params:
         command=config["deeptools"]["computeMatrix"]["mode"],
         extra=computematrix_args(),

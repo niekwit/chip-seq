@@ -20,7 +20,7 @@ rule index_fasta:
         f"{resources.fasta}.fai",
     log:
         "logs/resources/index_fasta.log"
-    cache: True
+    cache: False
     threads: config["resources"]["r"]["cpu"]
     resources: 
         runtime=config["resources"]["r"]["time"]
@@ -95,7 +95,7 @@ rule bowtie2_build:
         ),
     params:
         extra=""
-    cache: True
+    cache: False
     log:
         "logs/bowtie2_build/index.log"
     threads: config["resources"]["mapping"]["cpu"] * 2

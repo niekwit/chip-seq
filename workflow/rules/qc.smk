@@ -48,16 +48,16 @@ rule multiqc:
 
 rule readcounts: # Read count pre and post duplication
     input:
-        pre=expand("results/mapped/{sample}.bl.sorted.bam", sample=SAMPLES),
-        post=expand("results/mapped/{sample}.dedup.bam", sample=SAMPLES),
+        pre=expand(f"results/{bowtie2_dir}/{{sample}}.bl.sorted.bam", sample=SAMPLES),
+        post=expand(f"results/{bowtie2_dir}/{{sample}}.dedup.bam", sample=SAMPLES),
     output:
-        "results/qc/read_counts.csv",
+        f"results/qc/{bowtie2_dir}/read_counts.csv",
     threads: config["resources"]["samtools"]["cpu"]
     resources: 
         runtime=config["resources"]["samtools"]["time"]
     conda:
         "../envs/plotting.yaml"
     log:
-        "logs/qc/readcounts.log"
+        f"logs/qc/{bowtie2_dir}/readcounts.log"
     script:
         "../scripts/readcounts.py"
