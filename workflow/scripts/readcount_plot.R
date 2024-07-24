@@ -26,7 +26,7 @@ p <- ggplot(df_melt, aes(sample, counts)) +
                                    vjust = 0.5,
                                    hjust = 1),
         legend.position = c(0.02, 0.9)) +
-  scale_y_continuous(limits = c(0, max(df.melt$counts) * 1.15),
+  scale_y_continuous(limits = c(0, max(df_melt$counts) * 1.15),
                      expand = expansion(mult = c(0, 0.1))) +
   scale_x_discrete(guide = guide_axis(angle = 45)) +
   ylab("Read count") +
@@ -35,8 +35,8 @@ p <- ggplot(df_melt, aes(sample, counts)) +
          y = guide_axis(minor.ticks = TRUE)) +
   scale_fill_manual(labels = c("Pre-deduplication",
                                "Post-deduplication"),
-                    values = c("pre.dedup_counts" = "aquamarine4",
-                               "post.dedup_counts" = "#ff8d37"))
+                    values = c("pre.dedup_counts" = "#419179",
+                               "post.dedup_counts" = "#56A8CBFF"))
 
 # Save plot
 ggsave(snakemake@output[[1]],
