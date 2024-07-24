@@ -1,30 +1,30 @@
 def targets():
     # Base targets
     TARGETS = [
-        "results/plots/readcounts_plot.pdf",
-        "results/plots/alignment-rates.pdf",
-        "results/plots/PCA.pdf",
-        "results/plots/scree.pdf",
-        "results/plots/bam_fingerprint.pdf",
-        "results/plots/sample_correlation.pdf",
-        "results/plots/profile.pdf",
-        "results/plots/heatmap.pdf",
-        expand("results/bigwig/single/{sample}.bw", sample=SAMPLES),
+        f"results/plots/{bowtie2_dir}/readcounts_plot.pdf",
+        f"results/plots/{bowtie2_dir}/alignment-rates.pdf",
+        f"results/plots/{bowtie2_dir}/PCA.pdf",
+        f"results/plots/{bowtie2_dir}/scree.pdf",
+        f"results/plots/{bowtie2_dir}/bam_fingerprint.pdf",
+        f"results/plots/{bowtie2_dir}/sample_correlation.pdf",
+        f"results/plots/{bowtie2_dir}/profile.pdf",
+        f"results/plots/{bowtie2_dir}/heatmap.pdf",
+        expand(f"results/bigwig/single/{bowtie2_dir}/{{sample}}.bw", sample=SAMPLES),
         "results/qc/multiqc.html",
     ]
 
     if config["peak_calling"]["macs2"]["run"]:
         if regions == "narrow":
             TARGETS.extend([
-                expand(f"results/macs2_narrow/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.narrowPeak", ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
-                f"results/plots/macs2_narrow/fdr{fdr}/peaks_distance_to_TSS.pdf", 
-                f"results/plots/macs2_narrow/fdr{fdr}/peak_distributions.pdf",
+                expand(f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.narrowPeak", ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
+                f"results/plots/macs2_narrow/{bowtie2_dir}/fdr{fdr}/peaks_distance_to_TSS.pdf", 
+                f"results/plots/macs2_narrow/{bowtie2_dir}/fdr{fdr}/peak_distributions.pdf",
                 ])
         elif regions == "broad":
             TARGETS.extend([
-                expand(f"results/macs2_broad/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.broadPeak", ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
-                f"results/plots/macs2_broad/fdr{fdr}/peaks_distance_to_TSS.pdf", 
-                f"results/plots/macs2_broad/fdr{fdr}/peak_distributions.pdf",
+                expand(f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.broadPeak", ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
+                f"results/plots/macs2_broad/{bowtie2_dir}/fdr{fdr}/peaks_distance_to_TSS.pdf", 
+                f"results/plots/macs2_broad/{bowtie2_dir}/fdr{fdr}/peak_distributions.pdf",
                 ])
     return TARGETS
         
@@ -216,8 +216,6 @@ def peak_mode():
 
 
 def bowtie2_dir():
-    
-
     if config["bowtie2"]["k_mode"] == 0:
         return f"mapped_q{config["samtools"]["mapq"]}"
     else:
