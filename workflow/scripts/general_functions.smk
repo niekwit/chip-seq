@@ -14,7 +14,6 @@ def targets():
     ]
 
     if config["peak_calling"]["macs2"]["run"]:
-        TARGETS.append(expand(f"results/{peak_mode}/fdr{fdr}/{{conditions}}.geneIDs.txt", conditions=CONDITIONS))
         if regions == "narrow":
             TARGETS.extend([
                 expand(f"results/macs2_narrow/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.narrowPeak", ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
@@ -193,7 +192,7 @@ def macs2_params():
         genome = "dm"
     
     if config["peak_calling"]["macs2"]["regions"] == "broad":
-        cutoff = config["peak_calling_macs2"]["broad_cutoff"]
+        cutoff = config["peak_calling"]["macs2"]["broad_cutoff"]
         broad = f"--broad --broad-cutoff {cutoff} "
         qvalue= ""
     else:
@@ -206,13 +205,6 @@ def macs2_params():
     return f"-f {format_} -g {genome} {qvalue} {broad} {extra}"
 
 
-def peak_fdr(type_):
-    if type_ == "macs2_narrow":
-        return config["peak_calling"]["macs2"]["qvalue"]
-    elif type_ == "macs2_broad_cutoff":
-        return config["peak_calling"]["macs2"]["broad_cutoff"]
-
-
 def peak_mode():
     """
     Returns MACS2 peak calling mode as string based on config file
@@ -221,3 +213,12 @@ def peak_mode():
         return "macs2_broad"
     else:
         return "macs2_narrow"
+
+
+def bowtie2_dir():
+    
+
+    if config["bowtie2"]["k_mode"] == 0:
+        return f"mapped_q{config["samtools"]["mapq"]}"
+    else:
+        return f"mapped_k{config['bowtie2']['k_mode']}" 
