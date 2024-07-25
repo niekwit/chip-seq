@@ -14,7 +14,7 @@ bed.files <- snakemake@input[["bed"]]
 gtf <- snakemake@input[["gtf"]]
 
 # Load annotation database
-txdb <- makeTxDbFromGFF(gtf)
+txdb <- GenomicFeatures::makeTxDbFromGFF(gtf)
 
 # Load sample information
 sample_info <- read.csv("config/samples.csv", header = TRUE)
@@ -25,6 +25,10 @@ if (any(grepl("\\.narrowPeak$", bed.files)) == TRUE) {
   samples <- sub(".*\\/([^\\/]+)\\_peaks.narrowPeak", "\\1", bed.files)
 } else if (any(grepl("\\.broadPeak$", bed.files)) == TRUE) {
   samples <- sub(".*\\/([^\\/]+)\\_peaks.broadPeak", "\\1", bed.files)
+} else if (any(grepl("\\.bed$", bed.files)) == TRUE) {
+  samples <- sub(".*\\/([^\\/]+)\\.bed", "\\1", bed.files)
+} else {
+  stop("No valid bed files provided")
 }
 names(bed.files) <- samples
 
@@ -32,7 +36,7 @@ names(bed.files) <- samples
 conditions <- unique(str_replace(sample_info$sample, "_[0-9]+$", ""))
 
 # Order named bed.files so that they match the order of conditions (match to names)
-bed.files <- bed.files[conditions]
+#bed.files <- bed.files[conditions]
 
 # Annotate bed files
 peakAnnoList <- lapply(bed.files,
