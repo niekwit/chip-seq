@@ -16,13 +16,13 @@ def targets():
     if config["peak_calling"]["macs2"]["run"]:
         if regions == "narrow":
             TARGETS.extend([
-                expand(f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.narrowPeak", ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
+                expand(f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.narrowPeak", zip, ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
                 f"results/plots/macs2_narrow/{bowtie2_dir}/fdr{fdr}/peaks_distance_to_TSS.pdf", 
                 f"results/plots/macs2_narrow/{bowtie2_dir}/fdr{fdr}/peak_distributions.pdf",
                 ])
         elif regions == "broad":
             TARGETS.extend([
-                expand(f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.broadPeak", ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
+                expand(f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.broadPeak", zip, ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
                 f"results/plots/macs2_broad/{bowtie2_dir}/fdr{fdr}/peaks_distance_to_TSS.pdf", 
                 f"results/plots/macs2_broad/{bowtie2_dir}/fdr{fdr}/peak_distributions.pdf",
                 ])
