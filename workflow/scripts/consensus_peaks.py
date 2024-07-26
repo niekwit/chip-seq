@@ -8,11 +8,11 @@ out_bed_files = snakemake.output
 k = snakemake.params["keep"]
 extend_by = snakemake.params["extend_by"]
 max_size = snakemake.params["max_size"]
-chrom_sizes = snakemake.input["chrom_sizes"]
+chrom_sizes_file = snakemake.input["chrom_sizes"]
 
 # Load chrom sizes into dictionary
 chrom_sizes = {}
-with open(chrom_sizes) as f:
+with open(chrom_sizes_file) as f:
     for line in f:
         (chrom, size) = line.split()
         chrom_sizes[chrom] = int(size)
