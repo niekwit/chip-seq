@@ -4,7 +4,8 @@ import pandas as pd
 
 bed_files = snakemake.input["beds"]
 conditions = snakemake.params["conditions"]
-out_bed_files = snakemake.output
+out_bed_files = snakemake.output["bed_out"]
+out_bed_files_intermediate = snakemake.output["bed_out_intermediate"]
 k = snakemake.params["keep"]
 extend_by = snakemake.params["extend_by"]
 max_size = snakemake.params["max_size"]
@@ -17,64 +18,78 @@ with open(chrom_sizes_file) as f:
         (chrom, size) = line.split()
         chrom_sizes[chrom] = int(size)
 
-for condition in conditions:
+for condition in conditions:   
+    # Empty data frame to store consensus peaks
+    df = pd.DataFrame(columns=["chrom", "start", "end"])
+    
+    # Get all bed files that contain the condition
+    beds = [bed for bed in bed_files if condition in bed]
+    
+    # Load each individual bed file into a pandas data frame
+    ind_peaks = []
+    for bed in beds:
+        df = pd.read_csv(bed, sep="\t", header=None, low_memory=False)
+        ind_peaks.append(df)
+    
+    # Get overlapping regions between all bed files
+    x = pybedtools.BedTool()
+    input_list = [pybedtools.BedTool(bed).fn for bed in beds]
+    consensus_peaks = x.multi_intersect(i=input_list).to_dataframe()
+    
+    # Save intermediate bed file
+    bed_out_intermediate = [x for x in out_bed_files_intermediate if condition in x][0]
+    consensus_peaks.to_csv(bed_out_intermediate, sep="\t", header=False, index=False)
+    
+    # Get total number of overlapping regions before filtering
+    total = len(consensus_peaks)
+    
+    # Filter out regions that are not overlapping in at least k bed files
+    # name column contains the number of overlapping regions
+    consensus_peaks = consensus_peaks[consensus_peaks["name"] >= k]
+    
+    # Number of peaks not in k bed files
+    skipped_peaks = total - len(consensus_peaks)
+    
+    # Instead of only the overlapping region, get the region that contains 
+    # the whole area of the overlapping regions
+    extended_peaks = 0
+    for row in consensus_peaks.itertuples():
+        chrom = row.chrom
+        start = row.start
+        end = row.end
+    
+        starts = []
+        ends = []
+        for df in ind_peaks:
+                df = df[(df[0] == chrom) & (df[1] <= int(end)) & (df[2] >= int(start))]
+                if not df.empty:
+                    starts.append(df[1].min())
+                    ends.append(df[2].max())
+        start = min(starts)
+        end = max(ends)
+    
+        # Check if regions are short enough to extend
+        if end - start < max_size:
+            start = start - extend_by
+            if start < 1:
+                start = 1
+            # Do not extend end beyond chromosome boundary
+            end = end + extend_by
+            if end > chrom_sizes[chrom]:
+                end = chrom_sizes[chrom]
+            extended_peaks += 1
+        
+        df = df.append({"chrom": chrom, "start": start, "end": end}, ignore_index=True)
+    
+    # Remove duplicate line from df
+    df = df.drop_duplicates()
+    
+    # Name peaks
+    df["name"] = [f"peak_{i}" for i in range(1, len(df) + 1)]
+    
     # Save consensus peaks to bed file
     bed_out = [x for x in out_bed_files if condition in x][0]
-    
-    with open(bed_out, "w") as f:    
-        beds = [bed for bed in bed_files if condition in bed]
-        
-        # Load each individual bed file into a pandas data frame
-        ind_peaks = []
-        for bed in beds:
-            df = pd.read_csv(bed, sep="\t", header=None, low_memory=False)
-            ind_peaks.append(df)
-        
-        # Get overlapping regions between all bed files
-        x = pybedtools.BedTool()
-        input_list = [pybedtools.BedTool(bed).fn for bed in beds]
-        consensus_peaks = x.multi_intersect(i=input_list).to_dataframe()
-        
-        # Get total number of overlapping regions before filtering
-        total = len(consensus_peaks)
-        
-        # Filter out regions that are not overlapping in at least k bed files
-        # name column contains the number of overlapping regions
-        consensus_peaks = consensus_peaks[consensus_peaks["name"] >= k]
-        
-        # Number of peaks not in k bed files
-        skipped_peaks = total - len(consensus_peaks)
-        
-        # Instead of only the overlapping region, get the region that contains 
-        # the whole area of the overlapping regions
-        extended_peaks = 0
-        for row in consensus_peaks.itertuples():
-            chrom = row.chrom
-            start = row.start
-            end = row.end
-        
-            starts = []
-            ends = []
-            for df in ind_peaks:
-                    df = df[(df[0] == chrom) & (df[1] <= int(end)) & (df[2] >= int(start))]
-                    if not df.empty:
-                        starts.append(df[1].min())
-                        ends.append(df[2].max())
-            start = min(starts)
-            end = max(ends)
-        
-            # Check if regions are short enough to extend
-            if end - start < max_size:
-                start = start - extend_by
-                if start < 1:
-                    start = 1
-                # Do not extend end beyond chromosome boundary
-                end = end + extend_by
-                if end > chrom_sizes[chrom]:
-                    end = chrom_sizes[chrom]
-                extended_peaks += 1
-            
-            f.write(f"{chrom}\t{start}\t{end}\n")
+    df.to_csv(bed_out, sep="\t", header=False, index=False)
         
     log = [x for x in snakemake.log if condition in x][0]
     with open(log, "a") as log:
