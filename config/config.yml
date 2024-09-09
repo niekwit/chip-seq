@@ -1,8 +1,14 @@
 genome: hg38
 ensembl_genome_build: 110
+spike_in:
+  apply: False
+  downsample_only: False
+  genome: dm6
+  ensembl_genome_build: 110
 read_length: 150
 bowtie2:
   k_mode: 1
+  score_min: ""
   extra: ""
 samtools:
   mapq: 10
