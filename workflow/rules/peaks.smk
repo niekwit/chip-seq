@@ -26,25 +26,31 @@ if config["peak_calling"]["macs2"]["run"]:
         
         rule consensus_peaks:
             input:
-                f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.narrowPeak",
+                beds=expand(f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.narrowPeak", zip, ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
+                chrom_sizes=f"resources/{resources.genome}_chrom.sizes",
             output:
-                bed=f"results/macs2_narrow/fdr{fdr}/consensus_peaks/{{ip_sample}}.bed",
+                bed_out_intermediate=expand(f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.multi_intersect.bed", condition=CONDITIONS),
+                bed_out=expand(f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.bed", condition=CONDITIONS),
             params:
+                max_size=config["peak_calling"]["macs2"]["consensus_peaks"]["max_size"],
+                extend_by=config["peak_calling"]["macs2"]["consensus_peaks"]["extend_by"],
+                keep=config["peak_calling"]["macs2"]["consensus_peaks"]["keep"],
+                conditions=CONDITIONS,
                 extra=""
             threads: config["resources"]["deeptools"]["cpu"]
             resources:
                 runtime=config["resources"]["deeptools"]["time"]
             log:
-                f"logs/macs2_narrow/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{ip_sample}}.log"
+                expand(f"logs/macs2_broad/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.log", condition=CONDITIONS)
             conda:
                 "../envs/deeptools.yaml"
-            shell:
-                "bedtools multiinter {params.extra} -i {input} > {output.bed} 2> {log}"
+            script:
+                "../scripts/consensus_peaks.py"
 
 
         rule peak_annotation_plots:
             input:
-                bed=expand(f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{ip_sample}}.bed", ip_sample=IP_SAMPLES),
+                bed=expand(f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.bed", zip,  condition=CONDITIONS),
                 gtf=resources.gtf,
             output:
                 dt=f"results/plots/macs2_narrow/{bowtie2_dir}/fdr{fdr}/peaks_distance_to_TSS.pdf",
@@ -85,25 +91,31 @@ if config["peak_calling"]["macs2"]["run"]:
         
         rule consensus_peaks:
             input:
-                expand(f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.broadPeak", ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
+                beds=expand(f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.broadPeak", zip, ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
+                chrom_sizes=f"resources/{resources.genome}_chrom.sizes",
             output:
-                bed=f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{ip_sample}}.bed",
+                bed_out_intermediate=expand(f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.multi_intersect.bed", condition=CONDITIONS),
+                bed_out=expand(f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.bed", condition=CONDITIONS),
             params:
+                max_size=config["peak_calling"]["macs2"]["consensus_peaks"]["max_size"],
+                extend_by=config["peak_calling"]["macs2"]["consensus_peaks"]["extend_by"],
+                keep=config["peak_calling"]["macs2"]["consensus_peaks"]["keep"],
+                conditions=CONDITIONS,
                 extra=""
             threads: config["resources"]["deeptools"]["cpu"]
             resources:
                 runtime=config["resources"]["deeptools"]["time"]
             log:
-                f"logs/macs2_broad/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{ip_sample}}.log"
+                expand(f"logs/macs2_broad/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.log", condition=CONDITIONS)
             conda:
                 "../envs/deeptools.yaml"
-            shell:
-                "bedtools multiinter {params.extra} -i {input} > {output.bed} 2> {log}"
+            script:
+                "../scripts/consensus_peaks.py"
 
 
         rule peak_annotation_plots:
             input:
-                bed=expand(f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{ip_sample}}.bed", ip_sample=IP_SAMPLES),
+                bed=expand(f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.bed", condition=CONDITIONS),
                 gtf=resources.gtf,
             output:
                 dt=f"results/plots/macs2_broad/{bowtie2_dir}/fdr{fdr}/peaks_distance_to_TSS.pdf",
