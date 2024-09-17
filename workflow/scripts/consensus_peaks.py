@@ -1,6 +1,6 @@
+import os
 import pybedtools
 import pandas as pd
-
 
 bed_files = snakemake.input["beds"]
 conditions = snakemake.params["conditions"]
@@ -28,14 +28,23 @@ for condition in conditions:
     # Load each individual bed file into a pandas data frame
     ind_peaks = []
     for bed in beds:
-        df = pd.read_csv(bed, sep="\t", header=None, low_memory=False)
-        ind_peaks.append(df)
+        tmp = pd.read_csv(bed, sep="\t", header=None, low_memory=False)
+        ind_peaks.append(tmp)
     
     # Get overlapping regions between all bed files
     x = pybedtools.BedTool()
     input_list = [pybedtools.BedTool(bed).fn for bed in beds]
-    consensus_peaks = x.multi_intersect(i=input_list).to_dataframe()
+    consensus_peaks = x.multi_intersect(i=input_list)
+        
+    # Define column names
+    # 5 base columns and one for each bed file
+    names = ["chrom", "start", "end", "num", "list"]
+    base_file_names = [os.path.basename(x) for x in input_list]
+    [names.append(base_file_names[i]) for i in range(len(input_list))]
     
+    # Convert to pandas data frame
+    consensus_peaks = consensus_peaks.to_dataframe(names=names)
+
     # Save intermediate bed file
     bed_out_intermediate = [x for x in out_bed_files_intermediate if condition in x][0]
     consensus_peaks.to_csv(bed_out_intermediate, sep="\t", header=False, index=False)
@@ -45,7 +54,7 @@ for condition in conditions:
     
     # Filter out regions that are not overlapping in at least k bed files
     # name column contains the number of overlapping regions
-    consensus_peaks = consensus_peaks[consensus_peaks["name"] >= k]
+    consensus_peaks = consensus_peaks[consensus_peaks["num"] >= k]
     
     # Number of peaks not in k bed files
     skipped_peaks = total - len(consensus_peaks)
@@ -60,11 +69,11 @@ for condition in conditions:
     
         starts = []
         ends = []
-        for df in ind_peaks:
-                df = df[(df[0] == chrom) & (df[1] <= int(end)) & (df[2] >= int(start))]
-                if not df.empty:
-                    starts.append(df[1].min())
-                    ends.append(df[2].max())
+        for x in ind_peaks:
+                x = x[(x[0] == chrom) & (x[1] <= int(end)) & (x[2] >= int(start))]
+                if not x.empty:
+                    starts.append(x[1].min())
+                    ends.append(x[2].max())
         start = min(starts)
         end = max(ends)
     
@@ -79,7 +88,9 @@ for condition in conditions:
                 end = chrom_sizes[chrom]
             extended_peaks += 1
         
-        df = df.append({"chrom": chrom, "start": start, "end": end}, ignore_index=True)
+        # Add peak to df
+        tmp = pd.DataFrame([[chrom, start, end]], columns=["chrom", "start", "end"])
+        df = pd.concat([df,tmp])
     
     # Remove duplicate line from df
     df = df.drop_duplicates()
@@ -95,5 +106,5 @@ for condition in conditions:
     with open(log, "a") as log:
         log.write(f"Total number of peaks analysed: {total}\n")
         log.write(f"Skipped peaks: {skipped_peaks}\n")
-        log.write(f"Overlapping peaks: {len(consensus_peaks)}\n")
-        log.write(f"Extended peaks: {extended_peaks}\n")
+        log.write(f"Total overlapping peaks: {len(consensus_peaks)}\n")
+        log.write(f"Overlapping and extended peaks: {extended_peaks}\n")
