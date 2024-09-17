@@ -17,12 +17,15 @@ def targets():
         if regions == "narrow":
             TARGETS.extend([
                 expand(f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.narrowPeak", zip, ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
+                expand(f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.xls", zip, ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
+                expand(f"results/macs2_narrow/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_summits.bed", zip, ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
                 f"results/plots/macs2_narrow/{bowtie2_dir}/fdr{fdr}/peaks_distance_to_TSS.pdf", 
                 f"results/plots/macs2_narrow/{bowtie2_dir}/fdr{fdr}/peak_distributions.pdf",
                 ])
         elif regions == "broad":
             TARGETS.extend([
                 expand(f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.broadPeak", zip, ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
+                expand(f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.xls", zip, ip_sample=IP_SAMPLES, control_sample=CONTROL_SAMPLES),
                 f"results/plots/macs2_broad/{bowtie2_dir}/fdr{fdr}/peaks_distance_to_TSS.pdf", 
                 f"results/plots/macs2_broad/{bowtie2_dir}/fdr{fdr}/peak_distributions.pdf",
                 ])
@@ -155,12 +158,12 @@ def computematrix_args():
     """
     # Add mode argument
     mode = config["deeptools"]["computeMatrix"]["mode"]
-    if mode == "scale-regions".lower():
+    if mode == "scale-regions":
         rbl = config["deeptools"]["computeMatrix"]["regionBodyLength"]
         args = f"--regionBodyLength {rbl} "
-    elif mode == "reference-point".lower():
+    else:
         rp = config["deeptools"]["computeMatrix"]["referencePoint"]
-        args = f"--referencePoint {rp} "    
+        args = f"--referencePoint {rp} "  
     
     # Add common arguments
     b = config["deeptools"]["computeMatrix"]["upstream"]
