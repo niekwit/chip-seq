@@ -17,20 +17,23 @@ data <- read.delim(snakemake@input[[1]],
                    header = TRUE,
                    skip = 1)
 
-# Unique sample conditions
-samples <- colnames(data)[2:(ncol(data) - 1)]
-samples <- unique(str_replace(samples, "_[0-9]+$", ""))
+# Load samples.csv
+csv <- read.csv("config/samples.csv")
 
-# Set colours for plotting
-if (length(samples) == 1) {
-  colours <- "#1B9E77"
-} else if (length(samples) == 2) {
-  colours <- c("#1B9E77", "#D95F02")
-} else if (length(samples) > 2) {
-  colours <- brewer.pal(length(samples), "Dark2")
+# Unique IP and control sample conditions
+samples <- unique(str_replace(csv[["sample"]], "_[0-9]+$", ""))
+controls <- unique(str_replace(csv[["control"]], "_[0-9]+$", ""))
+
+if (length(samples) == length(controls)) {
+  # Set colours for plotting
+# use different symbols for IP and control samples
+# match ip and control sample in colour
+colours <- rep(brewer.pal(length(samples), "Dark2"), 2)
+names(colours) <- c(samples, controls)
+} else {
+  colours <- brewer.pal(length(samples) + length(controls), "Dark2")
+  names(colours) <- c(samples, controls)
 }
-names(colours) <- samples
-
 # Keep only components 1 and 2, transpose and add sample information
 df <- data[1:2, ] %>%
   dplyr::select(-c("Component", "Eigenvalue")) %>%
@@ -42,7 +45,11 @@ df <- data[1:2, ] %>%
   mutate(sample_condition = str_replace(sample,
                                         "_[0-9]+$",
                                         ""),
-         colour = colours[sample_condition])
+        colour = colours[sample_condition],
+        sample_type = ifelse(sample_condition %in% samples,
+                             "IP",
+                             "Control"))
+df$sample_condition <- factor(df$sample_condition)
 
 # Calculate variance explained for each PC
 PC1_var <- round((data$Eigenvalue[1] / sum(data$Eigenvalue)) * 100, 1)
@@ -52,16 +59,17 @@ PC2_var <- round((data$Eigenvalue[2] / sum(data$Eigenvalue)) * 100, 1)
 p <- ggplot(df,
             mapping = aes(x = PC1,
                           y = PC2,
-                          colour = colour)) +
-  geom_point(shape = 19,
-             size = 5) +
+                          colour = colour,
+                          shape = sample_type)) +
+  geom_point(size = 8) +
   geom_label_repel(data = df,
                    aes(label = sample,
                        fill = NULL),
                    size = 5,
                    nudge_x = 0.5,
                    nudge_y = 0.5) +
-  theme_cowplot(16) +
+  scale_shape_manual(values=c(15, 16)) +
+  theme_cowplot(18) +
   labs(x = paste0("PC1: ", PC1_var, "% variance"),
        y = paste0("PC2: ", PC2_var, "% variance")) +
   theme(legend.position = "none")
@@ -88,7 +96,7 @@ s <- ggplot(df, aes(Component, cumulative_variance)) +
   geom_bar(aes(Component, Eigenvalue),
            stat = "identity",
            colour = "black",
-           fill = "aquamarine4") +
+           fill = "#419179") +
   geom_line(mapping = aes(x = Component,
                           y = cumulative_variance,
                           group = 1),
