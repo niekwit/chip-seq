@@ -7,6 +7,8 @@ rule get_fasta:
     log:
         "logs/resources/get_fasta.log"
     cache: False
+    conda:
+        "../envs/trim_galore.yml"
     resources: 
         runtime=15
     script:
@@ -103,3 +105,47 @@ rule bowtie2_build:
         runtime=config["resources"]["mapping"]["time"]
     wrapper:
         f"{wrapper_version}/bio/bowtie2/build"
+
+
+if config["spike_in"]["apply"]:
+    rule get_si_fasta:
+        output:
+            si_resources.fasta,
+        retries: 3
+        params:
+            url=si_resources.fasta_url,
+        log:
+            "logs/resources/get_si_fasta.log"
+        conda:
+            "../envs/trim_galore.yml"
+        cache: False
+        resources: 
+            runtime=15
+        script:
+            "../scripts/get_resource.sh"
+    
+    
+    if not config["spike_in"]["downsample_only"]:
+        rule bowtie2_build_spike_in:
+            input:
+                ref=si_resources.fasta
+            output:
+                multiext(
+                    f"resources/{si_resources.genome}_{si_resources.build}_index/index",
+                    ".1.bt2",
+                    ".2.bt2",
+                    ".3.bt2",
+                    ".4.bt2",
+                    ".rev.1.bt2",
+                    ".rev.2.bt2",
+                ),
+            params:
+                extra=""
+            cache: False
+            log:
+                "logs/bowtie2_build_spike_in/index.log"
+            threads: config["resources"]["mapping"]["cpu"] * 2
+            resources: 
+                runtime=config["resources"]["mapping"]["time"]
+            wrapper:
+                f"{wrapper_version}/bio/bowtie2/build"
