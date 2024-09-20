@@ -116,9 +116,9 @@ rule deduplication:
         f"{wrapper_version}/bio/picard/markduplicates"
 
 
-rule bam_index:
+rule index_dedup:
     input:
-        f"results/{bowtie2_dir}/{{sample}}.dedup.bam"
+        f"results/{bowtie2_dir}/{{sample}}.dedup.bam",
     output:
         f"results/{bowtie2_dir}/{{sample}}.dedup.bam.bai",
     threads: config["resources"]["samtools"]["cpu"]
@@ -128,3 +128,68 @@ rule bam_index:
         f"logs/index_bam/{bowtie2_dir}/{{sample}}.log"
     wrapper:
         f"{wrapper_version}/bio/samtools/index"
+
+
+if config["spike_in"]["apply"]:
+    rule downsample:
+        input:
+            bam=expand(f"results/{bowtie2_dir}/{{sample}}.dedup.bam", sample=SAMPLES),
+            bai=expand(f"results/{bowtie2_dir}/{{sample}}.dedup.bam.bai", sample=SAMPLES),
+        output:
+            bam=expand(f"results/{bowtie2_dir}/{{sample}}.downsampled.bam", sample=SAMPLES),
+            bai=expand(f"results/{bowtie2_dir}/{{sample}}.downsampled.bam.bai", sample=SAMPLES),
+        threads: config["resources"]["samtools"]["cpu"]
+        resources: 
+            runtime=config["resources"]["mapping"]["time"]
+        log:
+            f"logs/downsample/{bowtie2_dir}/downsample.log"
+        script:
+            "../scripts/downsample.py"
+    
+    rule index_downsample:
+        input:
+            f"results/{bowtie2_dir}/{{sample}}.downsampled.bam"
+        output:
+            f"results/{bowtie2_dir}/{{sample}}.downsampled.bam.bai",
+        threads: config["resources"]["samtools"]["cpu"]
+        resources: 
+            runtime=config["resources"]["samtools"]["time"]
+        log:
+            f"logs/index_downsample/{bowtie2_dir}/{{sample}}.log"
+        wrapper:
+            f"{wrapper_version}/bio/samtools/index"
+
+
+    if not config["spike_in"]["downsample_only"]:
+        rule align_to_si_genome:
+            input:    
+                sample=["results/trimmed/{sample}_R1.fq.gz",
+                        "results/trimmed/{sample}_R2.fq.gz"],
+                idx=multiext(
+                    f"resources/{si_resources.genome}_{si_resources.build}_index/index",
+                    ".1.bt2",
+                    ".2.bt2",
+                    ".3.bt2",
+                    ".4.bt2",
+                    ".rev.1.bt2",
+                    ".rev.2.bt2",
+                ),
+            output:
+                temp(f"results/{bowtie2_dir}/{{sample}}_spike_in.bam"),
+            params:
+                extra=f"-k {config["bowtie2"]["k_mode"]}",
+            log:
+                f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}_{si_resources.genome}.log",
+            threads: config["resources"]["mapping"]["cpu"]
+            resources: 
+                runtime=config["resources"]["mapping"]["time"]
+            wrapper:
+                f"{wrapper_version}/bio/bowtie2/align"
+
+
+        rule correct_for_spike_in:
+            input:
+                bam=expand("results/{bowtie2_dir}/{{sample}}.dedup.bam", sample=SAMPLES),
+                si_bam=expand(f"results/{bowtie2_dir}/{{sample}}_spike_in.bam", sample=SAMPLES),
+            output:
+                bam=expand(temp(f"results/{bowtie2_dir}/{{sample}}.corrected.bam"), sample=SAMPLES),
