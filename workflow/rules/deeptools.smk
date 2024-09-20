@@ -43,7 +43,7 @@ rule PCA:
         "{params.extra} "
         "> {log} 2>&1"
 
-
+#do this in for loop: value of mode can also be both scale-regions and reference-point
 rule computeMatrix:
     input:
         bigwig=expand(f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw", condition=CONDITIONS),
@@ -60,3 +60,16 @@ rule computeMatrix:
         runtime=config["resources"]["deeptools"]["time"] * 2
     wrapper:
         f"{wrapper_version}/bio/deeptools/computematrix"
+'''
+#also a computeMatrix rule with regions being the peaks (for each condition)
+#use mode center
+rule computeMatrix_peaks:
+    input:
+        bed=expand(f"results/{peak_mode}/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.bed", condition=CONDITIONS),
+        bw=expand(f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw", condition=CONDITIONS),
+    output:
+        matrix_gz=f"results/deeptools/{bowtie2_dir}/bw_matrix_peaks.gz",
+    log:
+        f"logs/deeptools/{bowtie2_dir}/computeMatrix_peaks.log",
+    params:
+''' 
