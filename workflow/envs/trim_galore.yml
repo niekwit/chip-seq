@@ -5,3 +5,4 @@ channels:
   - defaults
 dependencies:
   - trim-galore=0.6.10
+  - conda-forge::pigz=2.8
