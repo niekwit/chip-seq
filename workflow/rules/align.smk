@@ -14,7 +14,7 @@ if config["bowtie2"]["k_mode"] == 0:
                 ".rev.2.bt2",
             ),
         output:
-            temp(f"results/{bowtie2_dir}/{{sample}}.bam"),
+            pipe(f"results/{bowtie2_dir}/{{sample}}.bam"),
         params:
             extra="",
         log:
@@ -30,7 +30,7 @@ if config["bowtie2"]["k_mode"] == 0:
         input:
             bam=f"results/{bowtie2_dir}/{{sample}}.bam",
         output:
-            temp(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
+            pipe(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
         params:
             extra=f"--min-MQ {config['samtools']['mapq']} -f 3",
         threads: config["resources"]["samtools"]["cpu"]
@@ -55,7 +55,7 @@ else:
                 ".rev.2.bt2",
             ),
         output:
-            temp(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
+            pipe(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
         params:
             extra=f"-k {config["bowtie2"]["k_mode"]}",
         log:
@@ -71,10 +71,10 @@ rule remove_blacklisted_regions:
         left=f"results/{bowtie2_dir}/{{sample}}.filtered.bam",
         right=resources.blacklist,
     output:
-        temp(f"results/{bowtie2_dir}/{{sample}}.bl.bam"),
+        pipe(f"results/{bowtie2_dir}/{{sample}}.bl.bam"),
     params:
         extra="-v -nonamecheck",
-    threads: config["resources"]["deeptools"]["cpu"]
+    threads: 1
     resources: 
         runtime=config["resources"]["deeptools"]["time"]
     log:
@@ -87,7 +87,7 @@ rule sort:
     input:
         f"results/{bowtie2_dir}/{{sample}}.bl.bam",
     output:
-        temp(f"results/{bowtie2_dir}/{{sample}}.bl.sorted.bam"),
+        f"results/{bowtie2_dir}/{{sample}}.bl.sorted.bam",
     params:
         extra="-m 2G",
     threads: config["resources"]["samtools"]["cpu"]
