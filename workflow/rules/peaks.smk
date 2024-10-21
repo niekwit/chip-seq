@@ -87,6 +87,40 @@ if config["peak_calling"]["macs2"]["run"]:
                 f"logs/macs2_broad/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}_vs_{{control_sample}}.log"
             wrapper:
                 f"{wrapper_version}/bio/macs2/callpeak"
+        
+
+        rule count_reads_in_peaks:
+        # Adapted from https://www.biostars.org/p/337872/#337890
+            input:
+                bam=f"results/{bowtie2_dir}/{{sample}}.dedup.bam",
+                peak=f"results/macs2_broad/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}/{{ip_sample}}_vs_{{control_sample}}_peaks.broadPeak",
+            output:
+                total_read_count=f"results/macs2_broad/fdr{fdr}/read_counts/{{ip_sample}}.total.count",
+                peak_read_count=f"results/macs2_broad/fdr{fdr}/read_counts/{{ip_sample}}.peak.count",
+            params:
+                extra="",
+            threads: config["resources"]["deeptools"]["cpu"]
+            resources:
+                runtime=config["resources"]["deeptools"]["time"]
+            log:
+                f"logs/count_reads_in_peaks/fdr{fdr}/{{ip_sample}}.log"
+            conda:
+                "../envs/peak_calling.yaml"
+            shell:
+                "bedtools bamtobed "
+                "{params.extra} "
+                "-i {input.bam} | "
+                "sort -k1,1 -k2,2n | "
+                "tee >(wc -l > {output.total_read_count}) | "
+                "bedtools intersect "
+                "{params.extra} "
+                "-sorted "
+                "-c "
+                "-a {input.peak} "
+                "-b stdin | "
+                "awk '{{i+=$NF}}END{{print i}}' > "
+                "{output.peak_read_count} "
+                "{log}"
 
         
         rule consensus_peaks:
@@ -128,6 +162,26 @@ if config["peak_calling"]["macs2"]["run"]:
                 "../envs/R.yaml"
             script:
                 "../scripts/peak_annotation_plots.R"
+
+
+        rule plot_fraction_of_reads_in_peaks:
+            input:
+                total_read_count=expand(f"results/macs2_broad/fdr{fdr}/read_counts/{{ip_sample}}.total.count", ),
+                peak_read_count=f"results/macs2_broad/fdr{fdr}/read_counts/{{ip_sample}}.peak.count",
+            output:
+                plot=report(f"results/plots/macs2_broad/fdr{fdr}/frip.pdf", caption="../report/frip.rst", category="Fraction of reads in peaks"),
+                csv=f"results/macs2_broad/fdr{fdr}/frip.csv",
+            params:
+                extra="",
+            threads: config["resources"]["plotting"]["cpu"]
+            resources:
+                runtime=config["resources"]["plotting"]["time"]
+            log:
+                "logs/plot_frip/fdr{fdr}.log"
+            conda:
+                "../envs/R.yaml"
+            script:
+                    "../scripts/plot_frip.R"
 
 if config["peak_calling"]["htseq_deseq2"]["run"]:
     logger.info("Peak calling with htseq-count/DESeq2 selected")
