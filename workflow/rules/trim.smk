@@ -8,6 +8,8 @@ rule trim_galore_pe:
         fasta_rev=temp("results/trimmed/{sample}_R2.fq.gz"),
         report_rev="results/trimmed/reports/{sample}_R2_trimming_report.txt",
     threads: config["resources"]["trim"]["cpu"],
+    resources:
+        runtime=30,
     params:
         extra="--illumina -q 20",
     log:
