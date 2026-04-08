@@ -20,7 +20,7 @@ if paired_end:
 else:
     rule trim_galore_se:
         input:
-            "results/trimmed/{sample}.fastq.gz",
+            "reads/{sample}.fastq.gz",
         output:
             fasta="results/trimmed/{sample}.fq.gz",
             report="results/trimmed/reports/{sample}.fastq.gz_trimming_report.txt",
