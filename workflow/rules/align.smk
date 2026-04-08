@@ -112,8 +112,8 @@ rule deduplication:
         runtime=config["resources"]["samtools"]["time"]
     log:
         f"logs/deduplication/{bowtie2_dir}/{{sample}}.log"
-    wrapper:
-        f"{wrapper_version}/bio/picard/markduplicates"
+    wrapper: # PICARD fails with newer versions of wrapper
+        f"v3.10.2/bio/picard/markduplicates"
 
 
 rule index_dedup:
@@ -131,6 +131,8 @@ rule index_dedup:
 
 
 if config["spike_in"]["apply"]:
+    pass # TO DO
+    '''
     rule downsample:
         input:
             bam=expand(f"results/{bowtie2_dir}/{{sample}}.dedup.bam", sample=SAMPLES),
@@ -193,3 +195,4 @@ if config["spike_in"]["apply"]:
                 si_bam=expand(f"results/{bowtie2_dir}/{{sample}}_spike_in.bam", sample=SAMPLES),
             output:
                 bam=expand(temp(f"results/{bowtie2_dir}/{{sample}}.corrected.bam"), sample=SAMPLES),
+    '''
