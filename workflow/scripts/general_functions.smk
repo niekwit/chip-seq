@@ -67,7 +67,7 @@ def targets():
     return TARGETS
 
 
-def samples():
+def samples(paired_end):
     """
     Imports all samples from config/samples.csv
     """
@@ -77,18 +77,29 @@ def samples():
 
     # Check if samples from samples.csv match fastq files (both R1 and R2) in reads folder
     not_found = []
-    for sample in SAMPLES:
-        r1 = f"reads/{sample}_R1_001.fastq.gz"
-        r2 = f"reads/{sample}_R2_001.fastq.gz"
+    if paired_end:
+        for sample in SAMPLES:
+            r1 = f"reads/{sample}_R1_001.fastq.gz"
+            r2 = f"reads/{sample}_R2_001.fastq.gz"
 
-        if not os.path.isfile(r1):
-            not_found.append(r1)
-        if not os.path.isfile(r2):
-            not_found.append(r2)
+            if not os.path.isfile(r1):
+                not_found.append(r1)
+            if not os.path.isfile(r2):
+                not_found.append(r2)
 
-        if len(not_found) > 0:
-            not_found = "\n".join(not_found)
-            raise FileNotFoundError(f"Following fastq files not found:\n{not_found}")
+            if len(not_found) > 0:
+                not_found = "\n".join(not_found)
+                raise FileNotFoundError(f"Following fastq files not found:\n{not_found}")
+    else:
+        for sample in SAMPLES:
+            r = f"reads/{sample}.fastq.gz"
+
+            if not os.path.isfile(r):
+                not_found.append(r)
+
+            if len(not_found) > 0:
+                not_found = "\n".join(not_found)
+                raise FileNotFoundError(f"Following fastq files not found:\n{not_found}")
 
     assert len(SAMPLES) > 0, "No samples found in config/samples.csv"
 
