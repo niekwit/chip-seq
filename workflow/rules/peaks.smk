@@ -166,22 +166,22 @@ if config["peak_calling"]["macs2"]["run"]:
 
         rule plot_fraction_of_reads_in_peaks:
             input:
-                total_read_count=expand(f"results/macs2_broad/fdr{fdr}/read_counts/{{ip_sample}}.total.count", ),
-                peak_read_count=f"results/macs2_broad/fdr{fdr}/read_counts/{{ip_sample}}.peak.count",
+                total_read_count=expand(f"results/macs2_broad/fdr{fdr}/read_counts/{{ip_sample}}.total.count", ip_sample=IP_SAMPLES),
+                peak_read_count=expand(f"results/macs2_broad/fdr{fdr}/read_counts/{{ip_sample}}.peak.count", ip_sample=IP_SAMPLES),
             output:
                 plot=report(f"results/plots/macs2_broad/fdr{fdr}/frip.pdf", caption="../report/frip.rst", category="Fraction of reads in peaks"),
                 csv=f"results/macs2_broad/fdr{fdr}/frip.csv",
             params:
                 extra="",
-            threads: config["resources"]["plotting"]["cpu"]
+            threads: config["resources"]["r"]["cpu"]
             resources:
-                runtime=config["resources"]["plotting"]["time"]
+                runtime=config["resources"]["r"]["time"]
             log:
-                "logs/plot_frip/fdr{fdr}.log"
+                f"logs/plot_frip/fdr_{fdr}.log"
             conda:
                 "../envs/R.yaml"
             script:
-                    "../scripts/plot_frip.R"
+                "../scripts/plot_frip.R"
 
 if config["peak_calling"]["htseq_deseq2"]["run"]:
     logger.info("Peak calling with htseq-count/DESeq2 selected")
