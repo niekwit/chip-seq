@@ -283,3 +283,27 @@ def bowtie2_dir():
         return f"mapped_q{config["samtools"]["mapq"]}"
     else:
         return f"mapped_k{config['bowtie2']['k_mode']}"
+
+
+def paired_end():
+    """
+    Checks if paired-end reads are used
+    """
+    # Get one fastq file
+    reads = glob.glob("reads/*fastq.gz")
+    if len(reads) == 0:
+        reads = glob.glob("reads/*fastq.gz")
+    assert len(reads) != 0, "No fastq files found..."
+
+    fastq = reads[0]
+
+    # Check file extension to see if paired-end reads are used
+    if fastq.endswith("_R1_001.fastq.gz"):
+        logger.info("Paired-end reads detected...")
+        return True
+    elif fastq.endswith("_R2_001.fastq.gz"):
+        logger.info("Paired-end reads detected...")
+        return True
+    else:
+        logger.info("Single-end reads detected...")
+        return False
