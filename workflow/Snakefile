@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import re
 import datetime
+import glob
 from snakemake.utils import min_version, validate
 from snakemake.logging import logger
 from scripts.resources import Resources
@@ -50,12 +51,17 @@ fasta = resources.fasta
 genome = resources.genome
 
 # Get sample names
-SAMPLES = samples()
+paired_end = paired_end()
+SAMPLES = samples(paired_end)
 IP_SAMPLES = ip_samples()
 CONTROL_SAMPLES = control_samples()
 CONDITIONS = conditions()
 peak_mode = peak_mode()
 bowtie2_dir = bowtie2_dir()
+
+# Prevent wildcard from matching intermediate suffixes (.bl, .filtered, .sorted, etc.)
+wildcard_constraints:
+    sample="|".join(SAMPLES),
 
 
 include: "rules/resources.smk"
