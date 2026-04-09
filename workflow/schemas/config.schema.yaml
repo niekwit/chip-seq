@@ -7,14 +7,14 @@ type: object
 properties:
   genome:
     type: string
-    enum: ["hg38", "hg19", "mm10", "mm9", "dm3", "dm6"]
+    enum: ["hg38", "hg19", "mm38", "mm39", "dm3", "dm6"]
     description: Ensembl genome
-  
+
   ensembl_genome_build:
     type: integer
     minimum: 1
     description: Ensembl genome build
- 
+
   deeptools:
     type: object
     properties:
@@ -27,9 +27,12 @@ properties:
           normalizeUsing:
             type: string
             enum: ["RPKM", "CPM", "BPM", "RPGC", "None"]
+          extendReads:
+            type: integer
+            minimum: 1
           extra:
             type: string
-      
+
       computeMatrix:
         type: object
         properties:
@@ -60,7 +63,7 @@ properties:
             type: boolean
           extra:
             type: string
-      
+
       plotHeatmap:
         type: object
         properties:
@@ -78,12 +81,12 @@ properties:
             maximum: 1
           extra:
             type: string
-        
+
       required:
         - bigwig
         - computeMatrix
         - plotHeatmap
-  
+
   peak_calling:
     type: object
     properties:
@@ -105,7 +108,7 @@ properties:
             maximum: 1
           extra:
             type: string
-      
+
       htseq_deseq2:
         type: object
         properties:
@@ -138,7 +141,7 @@ properties:
                 minimum: 0
               extra:
                 type: string
-      
+
       genomic_blanket:
         type: object
         properties:

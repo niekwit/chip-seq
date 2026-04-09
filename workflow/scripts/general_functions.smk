@@ -331,15 +331,18 @@ def bamcoverage_args(paired_end):
     """
     Returns bamCoverage arguments as string based on config file.
     """
-    extend_reads = (
-        f"--extendReads {config['deeptools']['bigwig']['extendReads']}"
-        if config["deeptools"]["bigwig"]["extendReads"]
-        else ""
-    )
+    extend_reads_val = config["deeptools"]["bigwig"].get("extendReads", None)
+    if extend_reads_val is not None:
+        extend_reads = f"--extendReads {extend_reads_val}"
+    elif paired_end:
+        extend_reads = "--extendReads"
+    else:
+        extend_reads = ""
+
     bin_size = f"-bs {config['deeptools']['bigwig']['binSize']}"
     normalize_using = (
         f"--normalizeUsing {config['deeptools']['bigwig']['normalizeUsing']}"
     )
     extra = config["deeptools"]["bigwig"]["extra"]
 
-    return f"{extend_reads} {bin_size} {normalize_using} {extra}"
+    return f"{extend_reads} {bin_size} {normalize_using} {extra}".strip()
