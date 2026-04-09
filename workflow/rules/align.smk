@@ -1,30 +1,54 @@
 if config["bowtie2"]["k_mode"] == 0:
     logger.info(f"Standard Bowtie2 mapping with MAPQ > {config["samtools"]["mapq"]} filtering")
-    rule bowtie2_align:
-        input:
-            sample=["results/trimmed/{sample}_R1.fq.gz",
-                    "results/trimmed/{sample}_R2.fq.gz"],
-            idx=multiext(
-                f"resources/{resources.genome}_{resources.build}_index/index",
-                ".1.bt2",
-                ".2.bt2",
-                ".3.bt2",
-                ".4.bt2",
-                ".rev.1.bt2",
-                ".rev.2.bt2",
-            ),
-        output:
-            pipe(f"results/{bowtie2_dir}/{{sample}}.bam"),
-        params:
-            extra="",
-        log:
-            f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
-        threads: config["resources"]["mapping"]["cpu"]
-        resources: 
-            runtime=config["resources"]["mapping"]["time"]
-        wrapper:
-            f"{wrapper_version}/bio/bowtie2/align"
-
+    if paired_end:
+        rule bowtie2_align:
+            input:
+                sample=["results/trimmed/{sample}_R1.fq.gz",
+                        "results/trimmed/{sample}_R2.fq.gz"],
+                idx=multiext(
+                    f"resources/{resources.genome}_{resources.build}_index/index",
+                    ".1.bt2",
+                    ".2.bt2",
+                    ".3.bt2",
+                    ".4.bt2",
+                    ".rev.1.bt2",
+                    ".rev.2.bt2",
+                ),
+            output:
+                pipe(f"results/{bowtie2_dir}/{{sample}}.bam"),
+            params:
+                extra="",
+            log:
+                f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
+            threads: config["resources"]["mapping"]["cpu"]
+            resources: 
+                runtime=config["resources"]["mapping"]["time"]
+            wrapper:
+                f"{wrapper_version}/bio/bowtie2/align"
+    else:
+        rule bowtie2_align:
+            input:
+                sample=["results/trimmed/{sample}.fq.gz"],
+                idx=multiext(
+                    f"resources/{resources.genome}_{resources.build}_index/index",
+                    ".1.bt2",
+                    ".2.bt2",
+                    ".3.bt2",
+                    ".4.bt2",
+                    ".rev.1.bt2",
+                    ".rev.2.bt2",
+                ),
+            output:
+                pipe(f"results/{bowtie2_dir}/{{sample}}.bam"),
+            params:
+                extra="",
+            log:
+                f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
+            threads: config["resources"]["mapping"]["cpu"]
+            resources:
+                runtime=config["resources"]["mapping"]["time"]
+            wrapper:
+                f"{wrapper_version}/bio/bowtie2/align"
 
     rule mapq_filtering:
         input:
@@ -32,7 +56,7 @@ if config["bowtie2"]["k_mode"] == 0:
         output:
             pipe(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
         params:
-            extra=f"--min-MQ {config['samtools']['mapq']} -f 3",
+            extra=f"--min-MQ {config['samtools']['mapq']}" + (" -f 3" if paired_end else ""),
         threads: config["resources"]["samtools"]["cpu"]
         resources: 
             runtime=config["resources"]["samtools"]["time"]
@@ -41,30 +65,56 @@ if config["bowtie2"]["k_mode"] == 0:
         wrapper:
             f"{wrapper_version}/bio/samtools/view"
 else:
-    rule bowtie2_align:
-        input:
-            sample=["results/trimmed/{sample}_R1.fq.gz",
-                    "results/trimmed/{sample}_R2.fq.gz"],
-            idx=multiext(
-                f"resources/{resources.genome}_{resources.build}_index/index",
-                ".1.bt2",
-                ".2.bt2",
-                ".3.bt2",
-                ".4.bt2",
-                ".rev.1.bt2",
-                ".rev.2.bt2",
-            ),
-        output:
-            pipe(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
-        params:
-            extra=f"-k {config["bowtie2"]["k_mode"]}",
-        log:
-            f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
-        threads: config["resources"]["mapping"]["cpu"]
-        resources: 
-            runtime=config["resources"]["mapping"]["time"]
-        wrapper:
-            f"{wrapper_version}/bio/bowtie2/align"
+    if paired_end:
+        rule bowtie2_align:
+            input:
+                sample=["results/trimmed/{sample}_R1.fq.gz",
+                        "results/trimmed/{sample}_R2.fq.gz"],
+                idx=multiext(
+                    f"resources/{resources.genome}_{resources.build}_index/index",
+                    ".1.bt2",
+                    ".2.bt2",
+                    ".3.bt2",
+                    ".4.bt2",
+                    ".rev.1.bt2",
+                    ".rev.2.bt2",
+                ),
+            output:
+                pipe(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
+            params:
+                extra=f"-k {config["bowtie2"]["k_mode"]}",
+            log:
+                f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
+            threads: config["resources"]["mapping"]["cpu"]
+            resources: 
+                runtime=config["resources"]["mapping"]["time"]
+            wrapper:
+                f"{wrapper_version}/bio/bowtie2/align"
+    else:
+        rule bowtie2_align:
+            input:
+                sample=["results/trimmed/{sample}.fq.gz"],
+                idx=multiext(
+                    f"resources/{resources.genome}_{resources.build}_index/index",
+                    ".1.bt2",
+                    ".2.bt2",
+                    ".3.bt2",
+                    ".4.bt2",
+                    ".rev.1.bt2",
+                    ".rev.2.bt2",
+                ),
+            output:
+                pipe(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
+            params:
+                extra=f"-k {config["bowtie2"]["k_mode"]}",
+            log:
+                f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
+            threads: config["resources"]["mapping"]["cpu"]
+            resources: 
+                runtime=config["resources"]["mapping"]["time"]
+            wrapper:
+                f"{wrapper_version}/bio/bowtie2/align"
+
 
 rule remove_blacklisted_regions:
     input:
