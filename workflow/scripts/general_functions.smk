@@ -10,7 +10,7 @@ def targets():
         f"results/plots/{bowtie2_dir}/profile_genome.pdf",
         f"results/plots/{bowtie2_dir}/heatmap_genome.pdf",
         expand(f"results/bigwig/single/{bowtie2_dir}/{{sample}}.bw", sample=SAMPLES),
-        "results/qc/multiqc.html",
+        # "results/qc/multiqc.html",
     ]
 
     if config["peak_calling"]["macs2"]["run"]:
@@ -89,7 +89,9 @@ def samples(paired_end):
 
             if len(not_found) > 0:
                 not_found = "\n".join(not_found)
-                raise FileNotFoundError(f"Following fastq files not found:\n{not_found}")
+                raise FileNotFoundError(
+                    f"Following fastq files not found:\n{not_found}"
+                )
     else:
         for sample in SAMPLES:
             r = f"reads/{sample}.fastq.gz"
@@ -99,7 +101,9 @@ def samples(paired_end):
 
             if len(not_found) > 0:
                 not_found = "\n".join(not_found)
-                raise FileNotFoundError(f"Following fastq files not found:\n{not_found}")
+                raise FileNotFoundError(
+                    f"Following fastq files not found:\n{not_found}"
+                )
 
     assert len(SAMPLES) > 0, "No samples found in config/samples.csv"
 
@@ -251,12 +255,15 @@ def computematrix_peaks_args():
     return args
 
 
-def macs2_params():
+def macs2_params(paired_end):
     """
     Returns MACS2 parameters based on the genome and mode
     (narrow or broad) specified in the config file.
     """
-    format_ = "BAMPE"
+    if paired_end:
+        format_ = "BAMPE"
+    else:
+        format_ = "BAM"
 
     if "hg" in resources.genome:
         genome = "hs"
@@ -318,3 +325,21 @@ def paired_end():
     else:
         logger.info("Single-end reads detected...")
         return False
+
+
+def bamcoverage_args(paired_end):
+    """
+    Returns bamCoverage arguments as string based on config file.
+    """
+    extend_reads = (
+        f"--extendReads {config['deeptools']['bigwig']['extendReads']}"
+        if config["deeptools"]["bigwig"]["extendReads"]
+        else ""
+    )
+    bin_size = f"-bs {config['deeptools']['bigwig']['binSize']}"
+    normalize_using = (
+        f"--normalizeUsing {config['deeptools']['bigwig']['normalizeUsing']}"
+    )
+    extra = config["deeptools"]["bigwig"]["extra"]
+
+    return f"{extend_reads} {bin_size} {normalize_using} {extra}"

@@ -6,7 +6,7 @@ rule bigwig:
         f"results/bigwig/single/{bowtie2_dir}/{{sample}}.bw",
     params:
         effective_genome_size=effective_genome_size(),
-        extra=f"--extendReads -bs {config['deeptools']['bigwig']['binSize']} --normalizeUsing {config['deeptools']['bigwig']['normalizeUsing']} {config['deeptools']['bigwig']['extra']}",
+        extra=bamcoverage_args(paired_end),
     log:
         f"logs/deeptools/bigwig/{bowtie2_dir}/{{sample}}.log",
     threads: config["resources"]["deeptools"]["cpu"]
