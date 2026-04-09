@@ -79,7 +79,7 @@ if config["peak_calling"]["macs2"]["run"]:
                 "_peaks.broadPeak", 
                 "_peaks.xls",),
             params:
-                macs2_params(),
+                macs2_params(paired_end),
             threads: config["resources"]["macs2"]["cpu"]
             resources: 
                 runtime=config["resources"]["macs2"]["time"]
