@@ -95,31 +95,50 @@ rule plot_correlation:
         "> {log} 2>&1"
 
 
-rule plot_profile:
+rule plot_profile_genome:
     input:
-        f"results/deeptools/{bowtie2_dir}/bw_matrix.gz"
+        f"results/deeptools/{bowtie2_dir}/bw_matrix_genome.gz"
     output:
-        plot_img=report(f"results/plots/{bowtie2_dir}/profile.pdf", caption="../report/profile.rst", category="Profile"),
-        regions=f"results/deeptools/{bowtie2_dir}/plot_profile_regions.bed",
+        plot_img=report(f"results/plots/{bowtie2_dir}/profile_genome.pdf", caption="../report/profile.rst", category="Profile"),
+        regions=f"results/deeptools/{bowtie2_dir}/plot_profile_regions_genome.bed",
     log:
-        f"logs/deeptools/{bowtie2_dir}/plot_profile.log"
+        f"logs/deeptools/{bowtie2_dir}/plot_profile_genome.log"
     params:
         "--plotType=lines "
         "--perGroup "
         "--legendLocation=upper-right  "
     wrapper:
-        f"{wrapper_version}/bio/deeptools/plotprofile"  
+        f"{wrapper_version}/bio/deeptools/plotprofile"
 
 
-rule plot_heatmap:
+use rule plot_profile_genome as plot_profile_peaks with:
     input:
-        f"results/deeptools/{bowtie2_dir}/bw_matrix.gz"
+        f"results/deeptools/{bowtie2_dir}/bw_matrix_peaks.gz"
     output:
-        heatmap_img=report(f"results/plots/{bowtie2_dir}/heatmap.pdf", caption="../report/heatmap.rst", category="Heatmap"),
+        plot_img=report(f"results/plots/{bowtie2_dir}/profile_peaks.pdf", caption="../report/profile.rst", category="Profile"),
+        regions=f"results/deeptools/{bowtie2_dir}/plot_profile_regions_peaks.bed",
     log:
-        f"logs/deeptools/{bowtie2_dir}/plot_heatmap.log"
+        f"logs/deeptools/{bowtie2_dir}/plot_profile_peaks.log"
+
+
+rule plot_heatmap_genome:
+    input:
+        f"results/deeptools/{bowtie2_dir}/bw_matrix_genome.gz"
+    output:
+        heatmap_img=report(f"results/plots/{bowtie2_dir}/heatmap_genome.pdf", caption="../report/heatmap.rst", category="Heatmap"),
+    log:
+        f"logs/deeptools/{bowtie2_dir}/plot_heatmap_genome.log"
     params:
         "--colorMap viridis "
         "--whatToShow 'plot, heatmap and colorbar' "
     wrapper:
         f"{wrapper_version}/bio/deeptools/plotheatmap"
+
+
+use rule plot_heatmap_genome as plot_heatmap_peaks with:
+    input:
+        f"results/deeptools/{bowtie2_dir}/bw_matrix_peaks.gz"
+    output:
+        heatmap_img=report(f"results/plots/{bowtie2_dir}/heatmap_peaks.pdf", caption="../report/heatmap.rst", category="Heatmap"),
+    log:
+        f"logs/deeptools/{bowtie2_dir}/plot_heatmap_peaks.log"
