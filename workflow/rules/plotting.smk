@@ -49,24 +49,6 @@ rule plot_PCA:
         "../scripts/plot_PCA.R"
 
 
-rule plot_bam_fingerprint:
-    input:
-        bam_files=expand(f"results/{bowtie2_dir}/{{sample}}.dedup.bam", sample=SAMPLES),
-        bam_idx=expand(f"results/{bowtie2_dir}/{{sample}}.dedup.bam.bai", sample=SAMPLES),
-    output:
-        fingerprint=report(f"results/plots/{bowtie2_dir}/bam_fingerprint.pdf", caption="../report/bam_fingerprint.rst", category="BAM Fingerprint"),
-        qc_metrics=f"logs/deeptools/{bowtie2_dir}/plot_fingerprint_qc_metrics.txt",
-    log:
-        f"logs/deeptools/{bowtie2_dir}/bam_fingerprint.log"
-    params:
-        extra=""
-    threads: config["resources"]["deeptools"]["cpu"]
-    resources:
-        runtime=config["resources"]["deeptools"]["time"]
-    wrapper:
-        f"{wrapper_version}/bio/deeptools/plotfingerprint"
-
-
 rule plot_correlation:
     input:
         f"results/deeptools/{bowtie2_dir}/bw_summary.npz",

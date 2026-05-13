@@ -5,7 +5,6 @@ def targets():
         f"results/plots/{bowtie2_dir}/alignment-rates.pdf",
         f"results/plots/{bowtie2_dir}/PCA.pdf",
         f"results/plots/{bowtie2_dir}/scree.pdf",
-        f"results/plots/{bowtie2_dir}/bam_fingerprint.pdf",
         f"results/plots/{bowtie2_dir}/sample_correlation.pdf",
         f"results/plots/{bowtie2_dir}/profile_genome.pdf",
         f"results/plots/{bowtie2_dir}/heatmap_genome.pdf",
