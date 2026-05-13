@@ -44,32 +44,34 @@ rule PCA:
         "> {log} 2>&1"
 
 #do this in for loop: value of mode can also be both scale-regions and reference-point
-rule computeMatrix:
+rule computeMatrix_genome:
     input:
         bigwig=expand(f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw", condition=CONDITIONS),
         bed=resources.gtf,
     output:
-        matrix_gz=f"results/deeptools/{bowtie2_dir}/bw_matrix.gz",
+        matrix_gz=f"results/deeptools/{bowtie2_dir}/bw_matrix_genome.gz",
     log:
         f"logs/deeptools/{bowtie2_dir}/computeMatrix.log",
     params:
         command=config["deeptools"]["computeMatrix"]["mode"],
-        extra=computematrix_args(),
+        extra=computematrix_genome_args(),
     threads: config["resources"]["deeptools"]["cpu"] * 4
     resources: 
         runtime=config["resources"]["deeptools"]["time"] * 2
     wrapper:
         f"{wrapper_version}/bio/deeptools/computematrix"
-'''
+
 #also a computeMatrix rule with regions being the peaks (for each condition)
 #use mode center
-rule computeMatrix_peaks:
-    input:
-        bed=expand(f"results/{peak_mode}/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.bed", condition=CONDITIONS),
-        bw=expand(f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw", condition=CONDITIONS),
-    output:
-        matrix_gz=f"results/deeptools/{bowtie2_dir}/bw_matrix_peaks.gz",
-    log:
-        f"logs/deeptools/{bowtie2_dir}/computeMatrix_peaks.log",
-    params:
-''' 
+if config["peak_calling"]["macs2"]["run"]:
+    use rule computeMatrix_genome as computeMatrix_peaks with:
+        input:
+            bed=expand(f"results/{peak_mode}/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.bed", condition=CONDITIONS),
+            bigwig=expand(f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw", condition=CONDITIONS),
+        output:
+            matrix_gz=f"results/deeptools/{bowtie2_dir}/bw_matrix_peaks.gz",
+        log:
+            f"logs/deeptools/{bowtie2_dir}/computeMatrix_peaks.log",
+        params:
+            command="reference-point",
+            extra=f"{computematrix_peaks_args()} --regionsFileName {{input.bed}} ",
