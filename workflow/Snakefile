@@ -59,6 +59,7 @@ CONDITIONS = conditions()
 peak_mode = peak_mode()
 bowtie2_dir = bowtie2_dir()
 
+
 # Prevent wildcard from matching intermediate suffixes (.bl, .filtered, .sorted, etc.)
 wildcard_constraints:
     sample="|".join(SAMPLES),
