@@ -1,6 +1,6 @@
 rule multiBigWigSummary:
     input:
-        expand(f"results/bigwig/single/{bowtie2_dir}/{{sample}}.bw", sample=SAMPLES)
+        expand(f"results/bigwig/single/{bowtie2_dir}/{{sample}}.bw", sample=SAMPLES),
     output:
         f"results/deeptools/{bowtie2_dir}/bw_summary.npz",
     params:
@@ -8,8 +8,8 @@ rule multiBigWigSummary:
     log:
         f"logs/deeptools/{bowtie2_dir}/multiBigWigSummary.log",
     threads: config["resources"]["deeptools"]["cpu"]
-    resources: 
-        runtime=config["resources"]["deeptools"]["time"]
+    resources:
+        runtime=config["resources"]["deeptools"]["time"],
     conda:
         "../envs/deeptools.yaml"
     shell:
@@ -23,7 +23,7 @@ rule multiBigWigSummary:
 
 rule PCA:
     input:
-        f"results/deeptools/{bowtie2_dir}/bw_summary.npz"
+        f"results/deeptools/{bowtie2_dir}/bw_summary.npz",
     output:
         f"results/deeptools/{bowtie2_dir}/pca.tab",
     params:
@@ -31,8 +31,8 @@ rule PCA:
     log:
         f"logs/deeptools/{bowtie2_dir}/pca.log",
     threads: config["resources"]["deeptools"]["cpu"]
-    resources: 
-        runtime=config["resources"]["deeptools"]["time"]
+    resources:
+        runtime=config["resources"]["deeptools"]["time"],
     conda:
         "../envs/deeptools.yaml"
     shell:
@@ -43,10 +43,14 @@ rule PCA:
         "{params.extra} "
         "> {log} 2>&1"
 
-#do this in for loop: value of mode can also be both scale-regions and reference-point
+
+# do this in for loop: value of mode can also be both scale-regions and reference-point
 rule computeMatrix_genome:
     input:
-        bigwig=expand(f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw", condition=CONDITIONS),
+        bigwig=expand(
+            f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw",
+            condition=CONDITIONS,
+        ),
         bed=resources.gtf,
     output:
         matrix_gz=f"results/deeptools/{bowtie2_dir}/bw_matrix_genome.gz",
@@ -56,18 +60,26 @@ rule computeMatrix_genome:
         command=config["deeptools"]["computeMatrix"]["mode"],
         extra=computematrix_genome_args(),
     threads: config["resources"]["deeptools"]["cpu"] * 4
-    resources: 
-        runtime=config["resources"]["deeptools"]["time"] * 2
+    resources:
+        runtime=config["resources"]["deeptools"]["time"] * 2,
     wrapper:
         f"{wrapper_version}/bio/deeptools/computematrix"
 
-#also a computeMatrix rule with regions being the peaks (for each condition)
-#use mode center
+
+# also a computeMatrix rule with regions being the peaks (for each condition)
+# use mode center
 if config["peak_calling"]["macs2"]["run"]:
+
     use rule computeMatrix_genome as computeMatrix_peaks with:
         input:
-            bed=expand(f"results/{peak_mode}/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.bed", condition=CONDITIONS),
-            bigwig=expand(f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw", condition=CONDITIONS),
+            bed=expand(
+                f"results/{peak_mode}/{bowtie2_dir}/fdr{fdr}/consensus_peaks/{{condition}}.bed",
+                condition=CONDITIONS,
+            ),
+            bigwig=expand(
+                f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw",
+                condition=CONDITIONS,
+            ),
         output:
             matrix_gz=f"results/deeptools/{bowtie2_dir}/bw_matrix_peaks.gz",
         log:

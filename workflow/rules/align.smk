@@ -1,10 +1,15 @@
 if config["bowtie2"]["k_mode"] == 0:
-    logger.info(f"Standard Bowtie2 mapping with MAPQ > {config["samtools"]["mapq"]} filtering")
+    logger.info(
+        f"Standard Bowtie2 mapping with MAPQ > {config["samtools"]["mapq"]} filtering"
+    )
     if paired_end:
+
         rule bowtie2_align:
             input:
-                sample=["results/trimmed/{sample}_R1.fq.gz",
-                        "results/trimmed/{sample}_R2.fq.gz"],
+                sample=[
+                    "results/trimmed/{sample}_R1.fq.gz",
+                    "results/trimmed/{sample}_R2.fq.gz",
+                ],
                 idx=multiext(
                     f"resources/{resources.genome}_{resources.build}_index/index",
                     ".1.bt2",
@@ -21,11 +26,13 @@ if config["bowtie2"]["k_mode"] == 0:
             log:
                 f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
             threads: config["resources"]["mapping"]["cpu"]
-            resources: 
-                runtime=config["resources"]["mapping"]["time"]
+            resources:
+                runtime=config["resources"]["mapping"]["time"],
             wrapper:
                 f"{wrapper_version}/bio/bowtie2/align"
+
     else:
+
         rule bowtie2_align:
             input:
                 sample=["results/trimmed/{sample}.fq.gz"],
@@ -46,7 +53,7 @@ if config["bowtie2"]["k_mode"] == 0:
                 f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
             threads: config["resources"]["mapping"]["cpu"]
             resources:
-                runtime=config["resources"]["mapping"]["time"]
+                runtime=config["resources"]["mapping"]["time"],
             wrapper:
                 f"{wrapper_version}/bio/bowtie2/align"
 
@@ -56,20 +63,25 @@ if config["bowtie2"]["k_mode"] == 0:
         output:
             temp(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
         params:
-            extra=f"--min-MQ {config['samtools']['mapq']}" + (" -f 3" if paired_end else ""),
+            extra=f"--min-MQ {config['samtools']['mapq']}"
+            + (" -f 3" if paired_end else ""),
         threads: config["resources"]["samtools"]["cpu"]
-        resources: 
-            runtime=config["resources"]["samtools"]["time"]
+        resources:
+            runtime=config["resources"]["samtools"]["time"],
         log:
-            f"logs/mapq_filtering/{bowtie2_dir}/{{sample}}.log"
+            f"logs/mapq_filtering/{bowtie2_dir}/{{sample}}.log",
         wrapper:
             f"{wrapper_version}/bio/samtools/view"
+
 else:
     if paired_end:
+
         rule bowtie2_align:
             input:
-                sample=["results/trimmed/{sample}_R1.fq.gz",
-                        "results/trimmed/{sample}_R2.fq.gz"],
+                sample=[
+                    "results/trimmed/{sample}_R1.fq.gz",
+                    "results/trimmed/{sample}_R2.fq.gz",
+                ],
                 idx=multiext(
                     f"resources/{resources.genome}_{resources.build}_index/index",
                     ".1.bt2",
@@ -87,10 +99,12 @@ else:
                 f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
             threads: config["resources"]["mapping"]["cpu"]
             resources:
-                runtime=config["resources"]["mapping"]["time"]
+                runtime=config["resources"]["mapping"]["time"],
             wrapper:
                 f"{wrapper_version}/bio/bowtie2/align"
+
     else:
+
         rule bowtie2_align:
             input:
                 sample=["results/trimmed/{sample}.fq.gz"],
@@ -111,7 +125,7 @@ else:
                 f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
             threads: config["resources"]["mapping"]["cpu"]
             resources:
-                runtime=config["resources"]["mapping"]["time"]
+                runtime=config["resources"]["mapping"]["time"],
             wrapper:
                 f"{wrapper_version}/bio/bowtie2/align"
 
@@ -125,10 +139,10 @@ rule remove_blacklisted_regions:
     params:
         extra="-v -nonamecheck",
     threads: 1
-    resources: 
-        runtime=config["resources"]["deeptools"]["time"]
+    resources:
+        runtime=config["resources"]["deeptools"]["time"],
     log:
-        f"logs/remove_blacklisted_regions/{bowtie2_dir}/{{sample}}.log"
+        f"logs/remove_blacklisted_regions/{bowtie2_dir}/{{sample}}.log",
     wrapper:
         f"{wrapper_version}/bio/bedtools/intersect"
 
@@ -141,10 +155,10 @@ rule sort:
     params:
         extra="-m 2G",
     threads: config["resources"]["samtools"]["cpu"]
-    resources: 
-        runtime=config["resources"]["samtools"]["time"]
+    resources:
+        runtime=config["resources"]["samtools"]["time"],
     log:
-        f"logs/sort_bam/{bowtie2_dir}/{{sample}}.log"
+        f"logs/sort_bam/{bowtie2_dir}/{{sample}}.log",
     wrapper:
         f"{wrapper_version}/bio/samtools/sort"
 
@@ -158,12 +172,12 @@ rule deduplication:
     params:
         extra="--REMOVE_DUPLICATES true",
     threads: config["resources"]["samtools"]["cpu"]
-    resources: 
+    resources:
         runtime=config["resources"]["samtools"]["time"],
-        mem_mb=4000
+        mem_mb=4000,
     log:
-        f"logs/deduplication/{bowtie2_dir}/{{sample}}.log"
-    wrapper: # PICARD fails with newer versions of wrapper
+        f"logs/deduplication/{bowtie2_dir}/{{sample}}.log",
+    wrapper:  # PICARD fails with newer versions of wrapper
         f"v3.10.2/bio/picard/markduplicates"
 
 
@@ -173,17 +187,17 @@ rule index_dedup:
     output:
         f"results/{bowtie2_dir}/{{sample}}.dedup.bam.bai",
     threads: config["resources"]["samtools"]["cpu"]
-    resources: 
-        runtime=config["resources"]["samtools"]["time"]
+    resources:
+        runtime=config["resources"]["samtools"]["time"],
     log:
-        f"logs/index_bam/{bowtie2_dir}/{{sample}}.log"
+        f"logs/index_bam/{bowtie2_dir}/{{sample}}.log",
     wrapper:
         f"{wrapper_version}/bio/samtools/index"
 
 
 if config["spike_in"]["apply"]:
-    pass # TO DO
-    '''
+    pass  # TO DO
+    """
     rule downsample:
         input:
             bam=expand(f"results/{bowtie2_dir}/{{sample}}.dedup.bam", sample=SAMPLES),
@@ -246,4 +260,4 @@ if config["spike_in"]["apply"]:
                 si_bam=expand(f"results/{bowtie2_dir}/{{sample}}_spike_in.bam", sample=SAMPLES),
             output:
                 bam=expand(temp(f"results/{bowtie2_dir}/{{sample}}.corrected.bam"), sample=SAMPLES),
-    '''
+    """

@@ -10,22 +10,25 @@ rule bigwig:
     log:
         f"logs/deeptools/bigwig/{bowtie2_dir}/{{sample}}.log",
     threads: config["resources"]["deeptools"]["cpu"]
-    resources: 
-        runtime=config["resources"]["deeptools"]["time"]
+    resources:
+        runtime=config["resources"]["deeptools"]["time"],
     wrapper:
         f"{wrapper_version}/bio/deeptools/bamcoverage"
 
 
 rule average_wig:
     input:
-        expand(f"results/bigwig/single/{bowtie2_dir}/{{ip_sample}}.bw", ip_sample=IP_SAMPLES),
+        expand(
+            f"results/bigwig/single/{bowtie2_dir}/{{ip_sample}}.bw",
+            ip_sample=IP_SAMPLES,
+        ),
     output:
         wig=temp(f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.wig"),
     threads: config["resources"]["deeptools"]["cpu"]
     resources:
-        runtime=config["resources"]["deeptools"]["time"]
+        runtime=config["resources"]["deeptools"]["time"],
     log:
-        "logs/wiggletools/wig_average_{condition}.log"
+        "logs/wiggletools/wig_average_{condition}.log",
     conda:
         "../envs/deeptools.yaml"
     script:
@@ -40,9 +43,9 @@ rule wig2bigwig:
         f"results/bigwig/average_bw/{bowtie2_dir}/{{condition}}.bw",
     threads: config["resources"]["deeptools"]["cpu"]
     resources:
-        runtime=config["resources"]["deeptools"]["time"]
+        runtime=config["resources"]["deeptools"]["time"],
     log:
-        f"logs/wigToBigWig/{bowtie2_dir}/{{condition}}.log"
+        f"logs/wigToBigWig/{bowtie2_dir}/{{condition}}.log",
     conda:
         "../envs/deeptools.yaml"
     shell:

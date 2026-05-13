@@ -5,12 +5,12 @@ rule get_fasta:
     params:
         url=resources.fasta_url,
     log:
-        "logs/resources/get_fasta.log"
+        "logs/resources/get_fasta.log",
     cache: False
     conda:
         "../envs/trim_galore.yml"
-    resources: 
-        runtime=15
+    resources:
+        runtime=15,
     script:
         "../scripts/get_resource.sh"
 
@@ -21,11 +21,11 @@ rule index_fasta:
     output:
         f"{resources.fasta}.fai",
     log:
-        "logs/resources/index_fasta.log"
+        "logs/resources/index_fasta.log",
     cache: False
     threads: config["resources"]["r"]["cpu"]
-    resources: 
-        runtime=config["resources"]["r"]["time"]
+    resources:
+        runtime=config["resources"]["r"]["time"],
     wrapper:
         f"{wrapper_version}/bio/samtools/faidx"
 
@@ -37,10 +37,10 @@ rule chrom_sizes:
     output:
         f"resources/{resources.genome}_chrom.sizes",
     log:
-        "logs/resources/chrom_sizes.log"
+        "logs/resources/chrom_sizes.log",
     threads: config["resources"]["r"]["cpu"]
-    resources: 
-        runtime=config["resources"]["r"]["time"]
+    resources:
+        runtime=config["resources"]["r"]["time"],
     conda:
         "../envs/deeptools.yaml"
     shell:
@@ -54,7 +54,7 @@ use rule get_fasta as get_black_list with:
     params:
         url=resources.blacklist_url,
     log:
-        "logs/resources/get_black_list.log"
+        "logs/resources/get_black_list.log",
 
 
 rule tidy_black_list:
@@ -63,10 +63,10 @@ rule tidy_black_list:
     output:
         resources.blacklist_tidy,
     log:
-        "logs/resources/tidy_black_list.log"
+        "logs/resources/tidy_black_list.log",
     threads: config["resources"]["r"]["cpu"]
-    resources: 
-        runtime=config["resources"]["r"]["time"]
+    resources:
+        runtime=config["resources"]["r"]["time"],
     conda:
         "../envs/deeptools.yaml"
     shell:
@@ -74,12 +74,12 @@ rule tidy_black_list:
 
 
 use rule get_fasta as get_gtf with:
-        output:
-            resources.gtf,
-        params:
-            url=resources.gtf_url,
-        log:
-            "logs/resources/get_gtf.log"
+    output:
+        resources.gtf,
+    params:
+        url=resources.gtf_url,
+    log:
+        "logs/resources/get_gtf.log",
 
 
 rule create_annotation_file:
@@ -88,10 +88,10 @@ rule create_annotation_file:
     output:
         rdata=f"resources/{resources.genome}_{resources.build}_annotation.Rdata",
     log:
-        "logs/resources/create_annotation_file.log"
+        "logs/resources/create_annotation_file.log",
     threads: config["resources"]["samtools"]["cpu"]
-    resources: 
-        runtime=config["resources"]["samtools"]["time"]
+    resources:
+        runtime=config["resources"]["samtools"]["time"],
     conda:
         "../envs/R.yaml"
     script:
@@ -100,7 +100,7 @@ rule create_annotation_file:
 
 rule bowtie2_build:
     input:
-        ref=fasta
+        ref=fasta,
     output:
         multiext(
             f"resources/{resources.genome}_{resources.build}_index/index",
@@ -112,18 +112,19 @@ rule bowtie2_build:
             ".rev.2.bt2",
         ),
     params:
-        extra=""
+        extra="",
     cache: False
     log:
-        "logs/bowtie2_build/index.log"
+        "logs/bowtie2_build/index.log",
     threads: config["resources"]["mapping"]["cpu"] * 2
-    resources: 
-        runtime=config["resources"]["mapping"]["time"]
+    resources:
+        runtime=config["resources"]["mapping"]["time"],
     wrapper:
         f"{wrapper_version}/bio/bowtie2/build"
 
 
 if config["spike_in"]["apply"]:
+
     rule get_si_fasta:
         output:
             si_resources.fasta,
@@ -131,20 +132,20 @@ if config["spike_in"]["apply"]:
         params:
             url=si_resources.fasta_url,
         log:
-            "logs/resources/get_si_fasta.log"
+            "logs/resources/get_si_fasta.log",
         conda:
             "../envs/trim_galore.yml"
         cache: False
-        resources: 
-            runtime=15
+        resources:
+            runtime=15,
         script:
             "../scripts/get_resource.sh"
-    
-    
+
     if not config["spike_in"]["downsample_only"]:
+
         rule bowtie2_build_spike_in:
             input:
-                ref=si_resources.fasta
+                ref=si_resources.fasta,
             output:
                 multiext(
                     f"resources/{si_resources.genome}_{si_resources.build}_index/index",
@@ -156,12 +157,12 @@ if config["spike_in"]["apply"]:
                     ".rev.2.bt2",
                 ),
             params:
-                extra=""
+                extra="",
             cache: False
             log:
-                "logs/bowtie2_build_spike_in/index.log"
+                "logs/bowtie2_build_spike_in/index.log",
             threads: config["resources"]["mapping"]["cpu"] * 2
-            resources: 
-                runtime=config["resources"]["mapping"]["time"]
+            resources:
+                runtime=config["resources"]["mapping"]["time"],
             wrapper:
                 f"{wrapper_version}/bio/bowtie2/build"
