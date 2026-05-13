@@ -14,14 +14,14 @@ if config["peak_calling"]["macs2"]["run"]:
                 "_peaks.xls",
                 "_summits.bed",),
             params:
-                macs2_params(),
+                macs2_params(paired_end),
             threads: config["resources"]["macs2"]["cpu"]
             resources: 
                 runtime=config["resources"]["macs2"]["time"]
             log:
                 f"logs/macs2_narrow/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}_vs_{{control_sample}}.log"
             wrapper:
-                f"{wrapper_version}/bio/macs2/callpeak"
+                "v2.9.1/bio/macs2/callpeak"
 
         
         rule consensus_peaks:
@@ -86,7 +86,7 @@ if config["peak_calling"]["macs2"]["run"]:
             log:
                 f"logs/macs2_broad/{bowtie2_dir}/fdr{fdr}/{{ip_sample}}_vs_{{control_sample}}.log"
             wrapper:
-                f"{wrapper_version}/bio/macs2/callpeak"
+                "v2.9.1/bio/macs2/callpeak"
         
 
         rule count_reads_in_peaks:
