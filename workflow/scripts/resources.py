@@ -57,6 +57,7 @@ class Resources:
         self.fasta = self._file_from_url(self.fasta_url)
         self.gtf = self._file_from_url(self.gtf_url)
         self.blacklist = self._file_from_url(self.blacklist_url)
+        self.blacklist_tidy = f"resources/{os.path.basename(self.blacklist_url).replace('.bed.gz', '_tidy.bed')}"
 
     def _file_from_url(self, url):
         """Returns file path for unzipped downloaded file"""

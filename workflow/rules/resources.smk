@@ -57,6 +57,22 @@ use rule get_fasta as get_black_list with:
         "logs/resources/get_black_list.log"
 
 
+rule tidy_black_list:
+    input:
+        resources.blacklist,
+    output:
+        resources.blacklist_tidy,
+    log:
+        "logs/resources/tidy_black_list.log"
+    threads: config["resources"]["r"]["cpu"]
+    resources: 
+        runtime=config["resources"]["r"]["time"]
+    conda:
+        "../envs/deeptools.yaml"
+    shell:
+        "sed 's/^chr//' {input} > {output}"
+
+
 use rule get_fasta as get_gtf with:
         output:
             resources.gtf,

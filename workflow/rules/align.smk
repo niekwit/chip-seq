@@ -119,7 +119,7 @@ else:
 rule remove_blacklisted_regions:
     input:
         left=f"results/{bowtie2_dir}/{{sample}}.filtered.bam",
-        right=resources.blacklist,
+        right=resources.blacklist_tidy,
     output:
         temp(f"results/{bowtie2_dir}/{{sample}}.bl.bam"),
     params:
@@ -159,7 +159,8 @@ rule deduplication:
         extra="--REMOVE_DUPLICATES true",
     threads: config["resources"]["samtools"]["cpu"]
     resources: 
-        runtime=config["resources"]["samtools"]["time"]
+        runtime=config["resources"]["samtools"]["time"],
+        mem_mb=4000
     log:
         f"logs/deduplication/{bowtie2_dir}/{{sample}}.log"
     wrapper: # PICARD fails with newer versions of wrapper
