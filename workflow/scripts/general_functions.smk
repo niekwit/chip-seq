@@ -152,6 +152,8 @@ def effective_genome_size():
         genome = "dm3"
     elif resources.genome == "dm6":
         genome = "dm6"
+    elif resources.genome == "test":
+        genome = "GRCh38"
     else:
         raise ValueError("Unsupported genome specified in config file...")
 
@@ -271,6 +273,10 @@ def macs2_params(paired_end):
         genome = "mm"
     elif "dm" in resources.genome:
         genome = "dm"
+    elif resources.genome == "test":
+        genome = "hs"
+    else:
+        raise ValueError("Unsupported genome specified in config file...")
 
     if config["peak_calling"]["macs2"]["regions"] == "broad":
         cutoff = config["peak_calling"]["macs2"]["broad_cutoff"]
