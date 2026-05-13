@@ -82,11 +82,11 @@ else:
             output:
                 temp(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
             params:
-                extra=f"-k {config["bowtie2"]["k_mode"]}",
+                extra=f"--no-unal -k {config['bowtie2']['k_mode']}",
             log:
                 f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
             threads: config["resources"]["mapping"]["cpu"]
-            resources: 
+            resources:
                 runtime=config["resources"]["mapping"]["time"]
             wrapper:
                 f"{wrapper_version}/bio/bowtie2/align"
@@ -106,11 +106,11 @@ else:
             output:
                 temp(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
             params:
-                extra=f"-k {config["bowtie2"]["k_mode"]}",
+                extra=f"--no-unal -k {config['bowtie2']['k_mode']}",
             log:
                 f"logs/bowtie2_align/{bowtie2_dir}/{{sample}}.log",
             threads: config["resources"]["mapping"]["cpu"]
-            resources: 
+            resources:
                 runtime=config["resources"]["mapping"]["time"]
             wrapper:
                 f"{wrapper_version}/bio/bowtie2/align"
