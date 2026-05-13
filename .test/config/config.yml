@@ -1,0 +1,91 @@
+genome: test
+ensembl_genome_build: 114
+spike_in:
+  apply: False
+  downsample_only: False
+  genome: dm6
+  ensembl_genome_build: 110
+read_length: 150
+bowtie2:
+  k_mode: 0
+  score_min: ""
+  extra: ""
+samtools:
+  mapq: 0
+deeptools:
+  bigwig:
+    normalizeUsing: CPM
+    binSize: 10
+    extra: ""
+  computeMatrix:
+    mode: scale-regions # scale-regions or reference-point
+    referencePoint: TSS # TSS, TES, center (only for reference-point mode)
+    regionBodyLength: 6000
+    upstream: 3000
+    downstream: 3000
+    binSize: 1000
+    averageTypeBins: mean
+  plotHeatmap:
+    interpolationMethod: auto
+    plotType: lines # lines, fill, se, std
+    colorMap: viridis # https://matplotlib.org/2.0.2/users/colormaps.html
+    alpha: 1.0
+    extra: ""
+peak_calling:
+  macs2:
+    run: True
+    qvalue: 0.05
+    regions: broad #broad or narrow
+    broad_cutoff: 0.01
+    extra: ""
+    consensus_peaks:
+      max_size: 100 # Maximum size of peaks to be extended
+      extend_by: 0 # Number of bp to extend peaks on either side
+      keep: 2 # Minimum number peaks that must overlap to keep
+      enrichment_analysis: 
+        run: True # Perform enrichment analysis
+        dbs: ["GO_Molecular_Function_2018","GO_Biological_Process_2018","KEGG_2019"]
+        terms: 10 # Number of terms to plot
+  htseq_deseq2:
+    run: False
+    use_htseq_count: False
+    mode: intersection-nonempty # union, intersection-strict, intersection-nonempty
+    feature: gene # GTF feature type to count reads in
+    extra: "" # any additional parameters for htseq-count
+    DESeq2: 
+      cumulative_filter_out: 10 # Filter out genes with less than this number of reads
+      smallest_group: 3 # Smallest group size for filter
+      alpha: 0.05 # FDR cutoff for DESeq2/plots
+      fc: 0.5 # fold change cutoff for volcano plots
+  genomic_blanket:
+    run: False
+    window_size: 100 # Window size in kbp
+    extra: ""
+resources:
+  trim:
+    cpu: 6
+    time: 60
+  fastqc:
+    cpu: 6
+    time: 60
+  mapping:
+    cpu: 16
+    time: 120
+  samtools:
+    cpu: 4
+    time: 30
+  deeptools:
+    cpu: 8
+    time: 120
+  deseq2:
+    cpu: 6
+    time: 60
+  r:
+    cpu: 4
+    time: 30
+  diffbind:
+    cpu: 56
+    time: 360
+  macs2:
+    cpu: 12
+    time: 120

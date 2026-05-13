@@ -1,0 +1,3 @@
+sample,factor,control,genotype,treatment
+HIF1A_Hx_1,HIF1A,HIFinput_Hx_1,WT,hypoxia
+HIF1A_Hx_2,HIF1A,HIFinput_Hx_1,WT,hypoxia
