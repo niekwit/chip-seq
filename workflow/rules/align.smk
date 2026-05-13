@@ -15,7 +15,7 @@ if config["bowtie2"]["k_mode"] == 0:
                     ".rev.2.bt2",
                 ),
             output:
-                pipe(f"results/{bowtie2_dir}/{{sample}}.bam"),
+                temp(f"results/{bowtie2_dir}/{{sample}}.bam"),
             params:
                 extra="",
             log:
@@ -39,7 +39,7 @@ if config["bowtie2"]["k_mode"] == 0:
                     ".rev.2.bt2",
                 ),
             output:
-                pipe(f"results/{bowtie2_dir}/{{sample}}.bam"),
+                temp(f"results/{bowtie2_dir}/{{sample}}.bam"),
             params:
                 extra="",
             log:
@@ -54,7 +54,7 @@ if config["bowtie2"]["k_mode"] == 0:
         input:
             bam=f"results/{bowtie2_dir}/{{sample}}.bam",
         output:
-            pipe(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
+            temp(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
         params:
             extra=f"--min-MQ {config['samtools']['mapq']}" + (" -f 3" if paired_end else ""),
         threads: config["resources"]["samtools"]["cpu"]
@@ -80,7 +80,7 @@ else:
                     ".rev.2.bt2",
                 ),
             output:
-                pipe(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
+                temp(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
             params:
                 extra=f"-k {config["bowtie2"]["k_mode"]}",
             log:
@@ -104,7 +104,7 @@ else:
                     ".rev.2.bt2",
                 ),
             output:
-                pipe(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
+                temp(f"results/{bowtie2_dir}/{{sample}}.filtered.bam"),
             params:
                 extra=f"-k {config["bowtie2"]["k_mode"]}",
             log:
@@ -121,7 +121,7 @@ rule remove_blacklisted_regions:
         left=f"results/{bowtie2_dir}/{{sample}}.filtered.bam",
         right=resources.blacklist,
     output:
-        pipe(f"results/{bowtie2_dir}/{{sample}}.bl.bam"),
+        temp(f"results/{bowtie2_dir}/{{sample}}.bl.bam"),
     params:
         extra="-v -nonamecheck",
     threads: 1
@@ -137,7 +137,7 @@ rule sort:
     input:
         f"results/{bowtie2_dir}/{{sample}}.bl.bam",
     output:
-        f"results/{bowtie2_dir}/{{sample}}.bl.sorted.bam",
+        temp(f"results/{bowtie2_dir}/{{sample}}.bl.sorted.bam"),
     params:
         extra="-m 2G",
     threads: config["resources"]["samtools"]["cpu"]
